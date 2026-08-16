@@ -1,19 +1,16 @@
+<script setup>
+const emit = defineEmits(["toggleSidebar"]);
+</script>
+
 <template>
-  <header class="topbar">
-    <div class="brand">Pinned<small>Echo &amp; Partner's date map</small></div>
-    <div class="search-box">
-      <input
-        type="text"
-        class="form-control"
-        placeholder="Search saved places…"
-      />
+  <nav class="navbar border-bottom px-3" style="background-color: #f8f9fa">
+    <div class="ms-auto d-flex align-items-center gap-3">
+      <button
+        class="btn btn-light d-lg-none me-2"
+        @click.prevent="emit('toggleSidebar')"
+      >
+        <i class="fa-solid fa-bars"></i>
+      </button>
     </div>
-    <div class="d-flex align-items-center gap-3">
-      <button class="btn-coral">+ Add place</button>
-      <div class="avatars d-flex">
-        <img src="https://i.pravatar.cc/60?img=12" alt="" />
-        <img src="https://i.pravatar.cc/60?img=47" alt="" />
-      </div>
-    </div>
-  </header>
+  </nav>
 </template>

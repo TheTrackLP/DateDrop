@@ -39,132 +39,220 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <main class="main">
-    <section class="list-pane">
-      <div class="chip-row">
-        <span class="chip active">All (12)</span>
-        <span class="chip">🏝️ Resorts</span>
-        <span class="chip">🍽️ Restaurants</span>
-        <span class="chip">🍔 Fast Food</span>
-        <span class="chip">🏊 Pools</span>
-        <span class="chip">☕ Cafes</span>
-      </div>
+  <div class="content-body">
+    <div class="mb-4">
+      <h4 class="fw-bold mb-0">Dashboard</h4>
+      <p class="text-muted small mb-0"></p>
+    </div>
+    <hr />
 
-      <div class="list-scroll">
-        <div class="section-title">
-          Our spots <small>Sorted by recent</small>
-        </div>
-
-        <div class="place-card selected">
-          <div
-            class="thumb"
-            style="
-              background-image: url(&quot;https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=200&h=200&fit=crop&quot;);
-            "
-          ></div>
-          <div class="flex-grow-1">
-            <div class="place-name">Bohol Bee Farm Resort</div>
-            <div class="place-meta">
-              <span class="tag">Resort</span>
-              <span class="badge-visited">Visited</span>
-            </div>
-            <div class="stars">★★★★☆</div>
-          </div>
-        </div>
-
-        <div class="place-card">
-          <div
-            class="thumb"
-            style="
-              background-image: url(&quot;https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=200&h=200&fit=crop&quot;);
-            "
-          ></div>
-          <div class="flex-grow-1">
-            <div class="place-name">Buzz Cafe, Tagbilaran</div>
-            <div class="place-meta">
-              <span class="tag">Cafe</span>
-              <span class="badge-want">Want to go</span>
-            </div>
-            <div class="stars">☆☆☆☆☆</div>
-          </div>
-        </div>
-
-        <div class="place-card">
-          <div
-            class="thumb"
-            style="
-              background-image: url(&quot;https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=200&h=200&fit=crop&quot;);
-            "
-          ></div>
-          <div class="flex-grow-1">
-            <div class="place-name">Loboc River Grill</div>
-            <div class="place-meta">
-              <span class="tag">Restaurant</span>
-              <span class="badge-visited">Visited</span>
-            </div>
-            <div class="stars">★★★★★</div>
-          </div>
-        </div>
-
-        <div class="place-card">
-          <div
-            class="thumb"
-            style="
-              background-image: url(&quot;https://images.unsplash.com/photo-1601918774946-25832a4be0d6?w=200&h=200&fit=crop&quot;);
-            "
-          ></div>
-          <div class="flex-grow-1">
-            <div class="place-name">Mocha Jack's Poolside</div>
-            <div class="place-meta">
-              <span class="tag">Pool</span>
-              <span class="badge-want">Want to go</span>
-            </div>
-            <div class="stars">☆☆☆☆☆</div>
-          </div>
-        </div>
-
-        <div class="place-card">
-          <div
-            class="thumb"
-            style="
-              background-image: url(&quot;https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?w=200&h=200&fit=crop&quot;);
-            "
-          ></div>
-          <div class="flex-grow-1">
-            <div class="place-name">Jollibee, Island City Mall</div>
-            <div class="place-meta">
-              <span class="tag">Fast Food</span>
-              <span class="badge-visited">Visited</span>
-            </div>
-            <div class="stars">★★★☆☆</div>
+    <!-- Summary cards -->
+    <div class="row g-3 mb-3">
+      <div class="col-6 col-md-3">
+        <div class="card border-0 shadow-sm">
+          <div class="card-body">
+            <div class="text-muted small">Total Locations</div>
+            <div class="fs-4 fw-bold" id="statTotal">0</div>
           </div>
         </div>
       </div>
-    </section>
-
-    <!-- Map pane -->
-    <section class="map-pane">
-      <div
-        id="map"
-        style="height: 700px; width: 100%; border-radius: 16px"
-      ></div>
-
-      <div class="map-popup">
-        <img
-          src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&h=200&fit=crop"
-          alt=""
-        />
-        <div class="body">
-          <div class="place-name">Bohol Bee Farm Resort</div>
-          <div class="place-meta mb-1">
-            <span class="tag">Resort</span>
-            <span class="badge-visited">Visited</span>
+      <div class="col-6 col-md-3">
+        <div class="card border-0 shadow-sm">
+          <div class="card-body">
+            <div class="text-muted small">Total Categories</div>
+            <div class="fs-4 fw-bold text-primary" id="statScheduled">0</div>
           </div>
-          <div class="stars">★★★★☆ (4.0)</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="card border-0 shadow-sm">
+          <div class="card-body">
+            <div class="text-muted small">Completed</div>
+            <div class="fs-4 fw-bold text-success" id="statCompleted">0</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="card border-0 shadow-sm">
+          <div class="card-body">
+            <div class="text-muted small">Pending</div>
+            <div class="fs-4 fw-bold text-warning" id="statPending">0</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Map + List -->
+    <div class="split">
+      <div class="map-col">
+        <div class="card border-0 shadow-sm">
+          <div class="card-body p-2">
+            <div id="map" style="width: 100%; border-radius: 16px"></div>
+          </div>
         </div>
       </div>
 
-      <button class="fab">+</button>
-    </section>
-  </main>
+      <div class="list-col">
+        <div class="card border-0 shadow-sm h-100">
+          <div
+            class="card-header bg-white d-flex justify-content-between align-items-center"
+          >
+            <span class="fw-semibold small">Locations / Events</span>
+            <span class="text-muted small" id="listCount">0 items</span>
+          </div>
+          <div class="card-body p-2 location-list" id="locationList">
+            <div class="list-group">
+              <a
+                href="#"
+                class="list-group-item list-group-item-action d-flex gap-3 align-items-center"
+              >
+                <img
+                  src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=100&h=100&fit=crop"
+                  class="rounded"
+                  width="56"
+                  height="56"
+                />
+                <div>
+                  <div class="fw-semibold">Bohol Bee Farm Resort</div>
+                  <span class="badge bg-success-subtle text-success-emphasis"
+                    >Resort</span
+                  >
+                  <span class="badge bg-danger-subtle text-danger-emphasis"
+                    >Visited</span
+                  >
+                </div>
+              </a>
+
+              <a
+                href="#"
+                class="list-group-item list-group-item-action d-flex gap-3 align-items-center"
+              >
+                <img
+                  src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=100&h=100&fit=crop"
+                  class="rounded"
+                  width="56"
+                  height="56"
+                />
+                <div>
+                  <div class="fw-semibold">Buzz Cafe, Tagbilaran</div>
+                  <span class="badge bg-success-subtle text-success-emphasis"
+                    >Cafe</span
+                  >
+                  <span class="badge bg-warning-subtle text-warning-emphasis"
+                    >Want to go</span
+                  >
+                </div>
+              </a>
+
+              <a
+                href="#"
+                class="list-group-item list-group-item-action d-flex gap-3 align-items-center"
+              >
+                <img
+                  src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=100&h=100&fit=crop"
+                  class="rounded"
+                  width="56"
+                  height="56"
+                />
+                <div>
+                  <div class="fw-semibold">Loboc River Grill</div>
+                  <span class="badge bg-success-subtle text-success-emphasis"
+                    >Restaurant</span
+                  >
+                  <span class="badge bg-danger-subtle text-danger-emphasis"
+                    >Visited</span
+                  >
+                </div>
+              </a>
+
+              <a
+                href="#"
+                class="list-group-item list-group-item-action d-flex gap-3 align-items-center"
+              >
+                <img
+                  src="https://images.unsplash.com/photo-1601918774946-25832a4be0d6?w=100&h=100&fit=crop"
+                  class="rounded"
+                  width="56"
+                  height="56"
+                />
+                <div>
+                  <div class="fw-semibold">Mocha Jack's Poolside</div>
+                  <span class="badge bg-success-subtle text-success-emphasis"
+                    >Pool</span
+                  >
+                  <span class="badge bg-warning-subtle text-warning-emphasis"
+                    >Want to go</span
+                  >
+                </div>
+              </a>
+
+              <a
+                href="#"
+                class="list-group-item list-group-item-action d-flex gap-3 align-items-center"
+              >
+                <img
+                  src="https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?w=100&h=100&fit=crop"
+                  class="rounded"
+                  width="56"
+                  height="56"
+                />
+                <div>
+                  <div class="fw-semibold">Jollibee, Island City Mall</div>
+                  <span class="badge bg-success-subtle text-success-emphasis"
+                    >Fast Food</span
+                  >
+                  <span class="badge bg-danger-subtle text-danger-emphasis"
+                    >Visited</span
+                  >
+                </div>
+              </a>
+
+              <!-- extra items to prove the list can grow long without pushing the map -->
+              <a
+                href="#"
+                class="list-group-item list-group-item-action d-flex gap-3 align-items-center"
+              >
+                <img
+                  src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=100&h=100&fit=crop"
+                  class="rounded"
+                  width="56"
+                  height="56"
+                />
+                <div>
+                  <div class="fw-semibold">Alona Beach Sunset Bar</div>
+                  <span class="badge bg-success-subtle text-success-emphasis"
+                    >Resort</span
+                  >
+                  <span class="badge bg-warning-subtle text-warning-emphasis"
+                    >Want to go</span
+                  >
+                </div>
+              </a>
+
+              <a
+                href="#"
+                class="list-group-item list-group-item-action d-flex gap-3 align-items-center"
+              >
+                <img
+                  src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=100&h=100&fit=crop"
+                  class="rounded"
+                  width="56"
+                  height="56"
+                />
+                <div>
+                  <div class="fw-semibold">Panglao Grill House</div>
+                  <span class="badge bg-success-subtle text-success-emphasis"
+                    >Restaurant</span
+                  >
+                  <span class="badge bg-danger-subtle text-danger-emphasis"
+                    >Visited</span
+                  >
+                </div>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>

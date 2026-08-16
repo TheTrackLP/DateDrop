@@ -1,307 +1,147 @@
-<script setup>
-import { ref, onMounted, onUnmounted } from "vue";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
+<script setup lang="ts">
+import SidebarNav from "@/components/SidebarNav.vue";
+import TopBar from "@/components/TopBar.vue";
+import { ref } from "vue";
 
-// Example places — swap this with your Supabase fetch later
-const places = ref([
-  { id: 1, name: "Bohol Bee Farm Resort", lat: 9.5825, lng: 123.8517 },
-  { id: 2, name: "Loboc River Grill", lat: 9.6337, lng: 124.0333 },
-  { id: 3, name: "Buzz Cafe, Tagbilaran", lat: 9.6474, lng: 123.8547 },
-]);
+const isSidebarOpen = ref(false);
 
-let map = null;
-
-onMounted(() => {
-  // Step 3: initialize the map, centered on Tagbilaran
-  map = L.map("map").setView([11.586276705834775, 122.75390511153525], 11);
-
-  // Step 4: add the OSM tile layer
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    attribution: "&copy; OpenStreetMap contributors",
-  }).addTo(map);
-
-  // Step 5: loop through places and drop a marker for each
-  places.value.forEach((place) => {
-    L.marker([place.lat, place.lng])
-      .addTo(map)
-      .bindPopup(`<b>${place.name}</b>`);
-  });
-});
-
-onUnmounted(() => {
-  // Step 6: clean up so the map doesn't leak memory on page navigation
-  if (map) {
-    map.remove();
-    map = null;
-  }
-});
+function toggleSidebar() {
+  isSidebarOpen.value = !isSidebarOpen.value;
+}
 </script>
+<style>
+html,
+body {
+  height: 100%;
+  margin: 0;
+  background: #f4f5f7;
+}
 
-<style scoped>
-.btn-coral {
-  background: var(--coral);
+.app {
+  display: flex;
+  height: 100vh;
+}
+
+.sidebar {
+  width: 240px;
+  flex: 0 0 auto;
+  background: #1f2a33;
   color: #fff;
+  border-right: 1px solid #e5e7eb;
+  font-size: 25px;
 }
-.btn-coral:hover {
-  background: var(--coral);
-  color: black;
-}
-.btn-outline-coral {
-  border-color: var(--coral);
-}
-.btn-outline-coral:hover {
-  background-color: var(--coral);
+.sidebar .nav-link {
   color: #fff;
+  border-radius: 8px;
+  margin: 5px 10px;
+  font-size: 1rem;
 }
-.border-coral:hover {
-  border-color: var(--coral);
+.sidebar .nav-link.active {
+  background: #e8536b;
+  color: #fff;
+  font-weight: 600;
+}
+.sidebar .nav-link:hover:not(.active) {
+  background: #e8536b;
+}
+
+.content {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.content-body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 1.25rem 1.5rem;
+}
+
+.split {
+  display: flex;
+  gap: 1rem;
+  min-height: 0;
+}
+.split .map-col {
+  flex: 1 1 60%;
+  min-width: 0;
+}
+.split .list-col {
+  flex: 1 1 38%;
+  min-width: 280px;
+}
+
+#map {
+  height: 520px;
+  border-radius: 10px;
+}
+
+.location-list {
+  max-height: 520px;
+  overflow-y: auto;
+}
+.location-item {
+  cursor: pointer;
+  border-radius: 8px;
+  transition:
+    background 0.12s ease,
+    border-color 0.12s ease;
+}
+.location-item:hover {
+  background: #f9fafb;
+}
+.location-item.active {
+  background: #eef2ff;
+  border-color: #c7d2fe !important;
+}
+
+label {
+  font-weight: bold;
+}
+
+@media (max-width: 991.98px) {
+  .sidebar {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 1050;
+    transform: translateX(-100%);
+    transition: transform 0.2s ease;
+  }
+  .sidebar.open {
+    transform: translateX(0);
+    box-shadow: 0 0 24px rgba(0, 0, 0, 0.15);
+  }
+
+  .sidebar-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    z-index: 1040;
+  }
+  .sidebar-backdrop.show {
+    display: block;
+  }
+
+  .split {
+    flex-direction: column;
+  }
+  #map {
+    height: 340px;
+  }
 }
 </style>
-
 <template>
   <div class="app">
-    <!-- Icon rail -->
+    <SidebarNav :is-open="isSidebarOpen" />
 
     <div class="content">
-      <!-- Top bar -->
-      <nav
-        class="navbar navbar-expand navbar-light bg-white border-bottom px-3"
-      >
-        <span class="navbar-brand fw-bold">📍 DateDrop</span>
+      <TopBar @toggleSidebar="toggleSidebar" />
 
-        <ul class="navbar-nav me-auto ms-4 d-none d-md-flex">
-          <li class="nav-item"><a class="nav-link active" href="#">Map</a></li>
-          <li class="nav-item"><a class="nav-link" href="#">List</a></li>
-          <li class="nav-item"><a class="nav-link" href="#">Saved</a></li>
-          <li class="nav-item"><a class="nav-link" href="#">Tags</a></li>
-        </ul>
-
-        <button class="btn btn-primary btn-sm me-3">+ Add place</button>
-        <img
-          src="https://i.pravatar.cc/40?img=12"
-          class="rounded-circle"
-          width="32"
-          height="32"
-        />
-      </nav>
-
-      <main>
-        <section class="list-pane p-3">
-          <div class="mb-3 d-flex flex-wrap gap-2">
-            <button class="btn btn-sm btn-primary rounded-pill">
-              All (12)
-            </button>
-            <button class="btn btn-sm btn-outline-secondary rounded-pill">
-              🏝️ Resorts
-            </button>
-            <button class="btn btn-sm btn-outline-secondary rounded-pill">
-              🍽️ Restaurants
-            </button>
-            <button class="btn btn-sm btn-outline-secondary rounded-pill">
-              🍔 Fast Food
-            </button>
-            <button class="btn btn-sm btn-outline-secondary rounded-pill">
-              🏊 Pools
-            </button>
-          </div>
-
-          <div class="d-flex justify-content-between align-items-baseline mb-2">
-            <span class="fw-bold">Our spots</span>
-            <small class="text-muted">Sorted by recent</small>
-          </div>
-
-          <div class="list-group">
-            <a
-              href="#"
-              class="list-group-item list-group-item-action d-flex gap-3 align-items-center"
-            >
-              <img
-                src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=100&h=100&fit=crop"
-                class="rounded"
-                width="56"
-                height="56"
-              />
-              <div>
-                <div class="fw-semibold">Bohol Bee Farm Resort</div>
-                <span class="badge bg-success-subtle text-success-emphasis"
-                  >Resort</span
-                >
-                <span class="badge bg-danger-subtle text-danger-emphasis"
-                  >Visited</span
-                >
-              </div>
-            </a>
-
-            <a
-              href="#"
-              class="list-group-item list-group-item-action d-flex gap-3 align-items-center"
-            >
-              <img
-                src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=100&h=100&fit=crop"
-                class="rounded"
-                width="56"
-                height="56"
-              />
-              <div>
-                <div class="fw-semibold">Buzz Cafe, Tagbilaran</div>
-                <span class="badge bg-success-subtle text-success-emphasis"
-                  >Cafe</span
-                >
-                <span class="badge bg-warning-subtle text-warning-emphasis"
-                  >Want to go</span
-                >
-              </div>
-            </a>
-
-            <a
-              href="#"
-              class="list-group-item list-group-item-action d-flex gap-3 align-items-center"
-            >
-              <img
-                src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=100&h=100&fit=crop"
-                class="rounded"
-                width="56"
-                height="56"
-              />
-              <div>
-                <div class="fw-semibold">Loboc River Grill</div>
-                <span class="badge bg-success-subtle text-success-emphasis"
-                  >Restaurant</span
-                >
-                <span class="badge bg-danger-subtle text-danger-emphasis"
-                  >Visited</span
-                >
-              </div>
-            </a>
-
-            <a
-              href="#"
-              class="list-group-item list-group-item-action d-flex gap-3 align-items-center"
-            >
-              <img
-                src="https://images.unsplash.com/photo-1601918774946-25832a4be0d6?w=100&h=100&fit=crop"
-                class="rounded"
-                width="56"
-                height="56"
-              />
-              <div>
-                <div class="fw-semibold">Mocha Jack's Poolside</div>
-                <span class="badge bg-success-subtle text-success-emphasis"
-                  >Pool</span
-                >
-                <span class="badge bg-warning-subtle text-warning-emphasis"
-                  >Want to go</span
-                >
-              </div>
-            </a>
-
-            <a
-              href="#"
-              class="list-group-item list-group-item-action d-flex gap-3 align-items-center"
-            >
-              <img
-                src="https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?w=100&h=100&fit=crop"
-                class="rounded"
-                width="56"
-                height="56"
-              />
-              <div>
-                <div class="fw-semibold">Jollibee, Island City Mall</div>
-                <span class="badge bg-success-subtle text-success-emphasis"
-                  >Fast Food</span
-                >
-                <span class="badge bg-danger-subtle text-danger-emphasis"
-                  >Visited</span
-                >
-              </div>
-            </a>
-
-            <!-- extra items to prove the list can grow long without pushing the map -->
-            <a
-              href="#"
-              class="list-group-item list-group-item-action d-flex gap-3 align-items-center"
-            >
-              <img
-                src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=100&h=100&fit=crop"
-                class="rounded"
-                width="56"
-                height="56"
-              />
-              <div>
-                <div class="fw-semibold">Alona Beach Sunset Bar</div>
-                <span class="badge bg-success-subtle text-success-emphasis"
-                  >Resort</span
-                >
-                <span class="badge bg-warning-subtle text-warning-emphasis"
-                  >Want to go</span
-                >
-              </div>
-            </a>
-
-            <a
-              href="#"
-              class="list-group-item list-group-item-action d-flex gap-3 align-items-center"
-            >
-              <img
-                src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=100&h=100&fit=crop"
-                class="rounded"
-                width="56"
-                height="56"
-              />
-              <div>
-                <div class="fw-semibold">Panglao Grill House</div>
-                <span class="badge bg-success-subtle text-success-emphasis"
-                  >Restaurant</span
-                >
-                <span class="badge bg-danger-subtle text-danger-emphasis"
-                  >Visited</span
-                >
-              </div>
-            </a>
-          </div>
-        </section>
-
-        <section class="map-pane">
-          <div
-            id="map"
-            style="height: 600px; width: 100%; border-radius: 16px"
-          ></div>
-          <button
-            class="btn btn-primary rounded-circle position-absolute"
-            style="right: 20px; bottom: 20px; width: 52px; height: 52px"
-          >
-            +
-          </button>
-          <div class="map-popup">
-            <img
-              src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&amp;h=200&amp;fit=crop"
-              alt=""
-            />
-            <div class="body">
-              <div class="place-name">Bohol Bee Farm Resort</div>
-              <div class="place-meta mb-1">
-                <span class="tag">Resort</span>
-                <span class="badge-visited">Visited</span>
-                <p>
-                  Lorem ipsum dolor, sit amet consectetur adipisicing elit.
-                  Perspiciatis a voluptatem dolor molestias illum tempora
-                  architecto illo impedit similique? Ipsum molestias unde
-                  blanditiis provident! Pariatur, ex. Rem iure iusto sint? Lorem
-                  ipsum dolor, sit amet consectetur adipisicing elit. Saepe
-                  dolore quidem sequi ab accusamus minus unde error, sint
-                  ducimus omnis distinctio nisi autem adipisci, odio quisquam
-                  laboriosam earum quasi ad. Lorem ipsum dolor sit, amet
-                  consectetur adipisicing elit. Corrupti mollitia dicta eos
-                  vitae odio ratione illum debitis ad aspernatur quibusdam
-                  voluptatem iste voluptatum totam, tempora natus consequatur
-                  ipsam rem quia!
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-      </main>
+      <router-view />
     </div>
   </div>
 </template>
