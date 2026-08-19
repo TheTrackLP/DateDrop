@@ -9,7 +9,7 @@ defineProps<{ isOpen: boolean }>();
     <hr />
     <nav class="nav flex-column">
       <router-link
-        to="/"
+        to="/main"
         class="nav-link"
         active-class="active"
         exact-active-class="active"
@@ -19,9 +19,12 @@ defineProps<{ isOpen: boolean }>();
       <a href="#" class="nav-link d-flex align-items-center gap-2 py-2 px-3">
         <i class="fa-solid fa-map-location-dot"></i> Map
       </a>
-      <a href="#" class="nav-link d-flex align-items-center gap-2 py-2 px-3">
+      <router-link
+        to="/places-list"
+        class="nav-link d-flex align-items-center gap-2 py-2 px-3"
+      >
         <i class="fa-solid fa-list"></i> List
-      </a>
+      </router-link>
       <router-link
         to="/categories"
         class="nav-link d-flex align-items-center gap-2 py-2 px-3"
