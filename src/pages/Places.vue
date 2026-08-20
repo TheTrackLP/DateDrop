@@ -1,5 +1,5 @@
 <script setup>
-import { nextTick, onMounted, ref } from "vue";
+import { computed, nextTick, onMounted, ref } from "vue";
 import { Modal } from "bootstrap";
 import { supabase } from "@/lib/supabase";
 import Swal from "sweetalert2";
@@ -10,8 +10,7 @@ const previewMap = ref("");
 const placesForm = ref({
   name: "",
   category_id: "",
-  lat: "",
-  lng: "",
+  pinpoint: "",
   address: "",
   price_range: "",
   notes: "",
@@ -37,13 +36,19 @@ const closeProductModalForm = () => {
   modalInstance?.hide();
 };
 
+const latPoint = ref("");
+const lngPoint = ref("");
+
 async function submitPlacesForm() {
+  const [lat, lng] = placesForm.value.pinpoint.split(/[ ,]+/);
+  latPoint.value = lat;
+  lngPoint.value = lng;
   if (placesFormMode.value === "create") {
     const { error } = await supabase.from("places").insert({
       name: placesForm.value.name,
       category_id: placesForm.value.category_id,
-      lat: placesForm.value.lat,
-      lng: placesForm.value.lng,
+      lat: lat,
+      lng: lng,
       address: placesForm.value.address,
       price_range: placesForm.value.price_range,
       notes: placesForm.value.notes,
@@ -72,8 +77,7 @@ async function submitPlacesForm() {
     placesForm.value = {
       name: "",
       category_id: "",
-      lat: "",
-      lng: "",
+      pinpoint: "",
       address: "",
       price_range: "",
       notes: "",
@@ -126,6 +130,16 @@ onMounted(fetchData);
 .modal-content {
   border-radius: 20px;
 }
+.map-embed :deep(iframe) {
+  width: 100% !important;
+  height: 100%;
+  border: 0;
+}
+.map-embed {
+  aspect-ratio: 16 / 9;
+  overflow: auto;
+  border-radius: 8px;
+}
 @media (max-width: 768px) {
   .place-image {
     width: 75px;
@@ -145,9 +159,6 @@ onMounted(fetchData);
           Manage and keep track of places you have visited or want to visit.
         </p>
       </div>
-      <button class="btn btn-coral px-4" @click="openPlaceForm">
-        <i class="fa-solid fa-plus"></i> Add Place
-      </button>
     </div>
     <!-- Statistics -->
     <div class="row g-3 mb-4">
@@ -203,22 +214,21 @@ onMounted(fetchData);
           <div class="col-md-4 col-lg-2">
             <select class="form-select">
               <option selected>All Categories</option>
-              <option>Resort</option>
-              <option>Restaurant</option>
-              <option>Cafe</option>
-              <option>Beach</option>
-              <option>Pool</option>
-              <option>Fast Food</option>
-              <option>Tourist Spot</option>
+              <option
+                :value="row.id"
+                v-for="(row, index) in fetchCategory"
+                :key="index"
+              >
+                {{ row.name }}
+              </option>
             </select>
           </div>
-          <!-- Status -->
           <div class="col-md-4 col-lg-2">
             <select class="form-select">
               <option selected>All Status</option>
-              <option>Visited</option>
-              <option>Want to go</option>
-              <option>Planned</option>
+              <option value="1">Visited</option>
+              <option value="2">Want to go</option>
+              <option value="3">Planned</option>
             </select>
           </div>
         </div>
@@ -233,7 +243,9 @@ onMounted(fetchData);
           <strong>All Places</strong>
           <span class="text-muted ms-2">48 places</span>
         </div>
-        <button class="btn btn-sm btn-outline-secondary">Clear Filters</button>
+        <button class="btn btn-coral px-4" @click="openPlaceForm">
+          <i class="fa-solid fa-plus"></i> Add Place
+        </button>
       </div>
     </div>
     <div class="card" v-for="value in fetchPlaces">
@@ -249,11 +261,27 @@ onMounted(fetchData);
             <div class="d-flex flex-wrap gap-1 mb-1">
               <span
                 class="badge rounded-pill"
-                :class="`text-bg-${value.category?.color}`"
+                :style="{ backgroundColor: value.category?.color }"
               >
                 {{ value.category?.name }}
               </span>
-              <span class="badge rounded-pill text-bg-primary"> Visited </span>
+
+              <span
+                class="badge bg-danger-subtle text-danger-emphasis"
+                v-if="value.status === 1"
+                >Visited</span
+              >
+
+              <span
+                class="badge bg-warning-subtle text-warning-emphasis"
+                v-else-if="value.status === 2"
+                >Want to go</span
+              >
+              <span
+                class="badge bg-success-subtle text-success-emphasis"
+                v-else-if="value.status === 3"
+                >Planning</span
+              >
             </div>
             <div class="place-meta">📍 Panglao, Bohol</div>
           </div>
@@ -263,132 +291,109 @@ onMounted(fetchData);
   </div>
 
   <div class="modal fade" ref="modalRef" tabindex="-1">
-    <div class="modal-dialog modal-xl">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
       <form @submit.prevent="submitPlacesForm">
         <div class="modal-content">
           <div class="modal-header text-white" style="background: #e8536b">
-            <h2>Add Place</h2>
+            <h2 class="fs-5 mb-0">Add Place</h2>
           </div>
           <div class="modal-body">
             <div class="row">
-              <div class="col-6 mb-4">
-                <div class="col-12 mb-4">
-                  <div class="form-group">
-                    <label for="">Name</label>
+              <div class="col-12 col-md-5 mb-4">
+                <div class="mb-3">
+                  <label class="form-label">Name</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    placeholder="e.g. Jollibee"
+                    required
+                    v-model="placesForm.name"
+                  />
+                </div>
+
+                <div class="row">
+                  <div class="col-12 mb-4">
+                    <label class="form-label">Lat</label>
                     <input
                       type="text"
                       class="form-control"
-                      placeholder="e.g. Jollibee"
+                      placeholder="Copy the Lat and Lng from the Google Maps"
                       required
-                      v-model="placesForm.name"
+                      v-model="placesForm.pinpoint"
                     />
                   </div>
-                </div>
-                <div class="row">
                   <div class="col-6 mb-4">
-                    <div class="form-group">
-                      <label for="">Lat</label>
-                      <input
-                        type="text"
-                        class="form-control"
-                        placeholder="Copy from Google Maps"
-                        required
-                        v-model="placesForm.lat"
-                      />
-                    </div>
-                  </div>
-                  <div class="col-6 mb-4">
-                    <div class="form-group">
-                      <label for="">Lng</label>
-                      <input
-                        type="text"
-                        class="form-control"
-                        placeholder="Copy from Google Maps"
-                        required
-                        v-model="placesForm.lng"
-                      />
-                    </div>
-                  </div>
-                  <div class="col-6 mb-4">
-                    <div class="form-group">
-                      <label for="">Category</label>
-                      <select
-                        class="form-select"
-                        required
-                        v-model="placesForm.category_id"
+                    <label class="form-label">Category</label>
+                    <select
+                      class="form-select"
+                      required
+                      v-model="placesForm.category_id"
+                    >
+                      <option
+                        :value="value.id"
+                        v-for="(value, index) in fetchCategory"
+                        :key="index"
                       >
-                        <option
-                          :value="value.id"
-                          v-for="(value, index) in fetchCategory"
-                        >
-                          {{ value.name }}
-                        </option>
-                      </select>
-                    </div>
+                        {{ value.name }}
+                      </option>
+                    </select>
                   </div>
                   <div class="col-6 mb-4">
-                    <div class="form-group">
-                      <label for="">Price Range</label>
-                      <input
-                        type="text"
-                        class="form-control"
-                        required
-                        v-model="placesForm.price_range"
-                      />
-                    </div>
+                    <label class="form-label">Price Range</label>
+                    <input
+                      type="text"
+                      class="form-control"
+                      required
+                      v-model="placesForm.price_range"
+                    />
                   </div>
                   <div class="col-12 mb-4">
-                    <div class="form-group">
-                      <label for="">Address</label>
-                      <input
-                        type="text"
-                        class="form-control"
-                        required
-                        v-model="placesForm.address"
-                      />
-                    </div>
+                    <label class="form-label">Address</label>
+                    <input
+                      type="text"
+                      class="form-control"
+                      required
+                      v-model="placesForm.address"
+                    />
                   </div>
-                  <div class="col-12 mb-4">
-                    <div class="form-group">
-                      <label for="">Notes</label>
-                      <textarea
-                        class="form-control"
-                        rows="4"
-                        v-model="placesForm.notes"
-                      ></textarea>
-                    </div>
+                  <div class="col-12 mb-3">
+                    <label class="form-label">Notes</label>
+                    <textarea
+                      class="form-control"
+                      rows="4"
+                      v-model="placesForm.notes"
+                    ></textarea>
                   </div>
                 </div>
               </div>
-              <div class="col-6 mb-4">
-                <div class="form-group mb-4">
-                  <label for="">Map Url</label>
+
+              <div class="col-12 col-md-7 mb-4">
+                <div class="mb-3">
+                  <label class="form-label">Map Url</label>
                   <input
                     type="text"
                     class="form-control"
                     v-model="placesForm.map_url"
                   />
                 </div>
-                <div class="form-group mb-4">
-                  <label for="">Preview Map</label>
-                  <iframe
-                    :src="placesForm.map_url"
-                    width="500"
-                    height="450"
-                    style="border: 0"
-                    allowfullscreen=""
-                    loading="lazy"
-                    referrerpolicy="strict-origin-when-cross-origin"
-                  ></iframe>
+                <div class="mb-3">
+                  <label class="form-label">Preview Map</label>
+                  <div class="ratio ratio-4x3">
+                    <p v-html="placesForm.map_url"></p>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
           <div class="modal-footer">
-            <button class="btn btn-danger px-4" @click="closeProductModalForm">
+            <button
+              type="button"
+              class="btn btn-danger px-4"
+              @click="closeProductModalForm"
+            >
               Close
             </button>
-            <button class="btn btn-success px-4">Save</button>
+            <button type="submit" class="btn btn-success px-4">Save</button>
           </div>
         </div>
       </form>
