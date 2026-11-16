@@ -16,7 +16,18 @@ const routes = [
         name: "AdminDashboard",
         component: () => import("@/Pages/Admin/Dashboard.vue"),
       },
+      {
+        path: "places",
+        name: "Places",
+        component: () => import("@/Pages/Places.vue"),
+      },
+      {
+        path: "categories",
+        name: "Categories",
+        component: () => import("@/Pages/Categories.vue"),
+      },
     ],
+    meta: { requiresAuth: true },
   },
 ];
 
@@ -28,10 +39,10 @@ const router = createRouter({
   },
 });
 
-// router.beforeEach(async (to) => {
-//   if (to.meta.requiresAuth) {
-//     const { data } = await supabase.auth.getSession();
-//     if (!data.session) return { name: "Login" };
-//   }
-// });
+router.beforeEach(async (to) => {
+  if (to.meta.requiresAuth) {
+    const { data } = await supabase.auth.getSession();
+    if (!data.session) return { name: "Login" };
+  }
+});
 export default router;

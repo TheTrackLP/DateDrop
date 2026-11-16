@@ -1,8 +1,27 @@
+<script setup>
+import { supabase } from "@/Lib/supabase";
+import { ref } from "vue";
+import { useRouter } from "vue-router";
+
+const email = ref("");
+const password = ref("");
+const router = useRouter();
+
+const handleLogin = async () => {
+  const { error } = await supabase.auth.signInWithPassword({
+    email: email.value,
+    password: password.value,
+  });
+
+  router.push({ name: "AdminDashboard" });
+};
+</script>
+
 <style>
 :root {
-  --brand: #1f5c4d;
   --brand-dark: #174739;
-  --page-bg: #eef2f0;
+  --brand: #e0577a;
+  --page-bg: linear-gradient(180deg, #f67280, #c06c84);
 }
 
 body {
@@ -26,7 +45,6 @@ body {
   width: 52px;
   height: 52px;
   border-radius: 14px;
-  background: var(--brand);
   color: #fff;
   font-size: 1.5rem;
   display: inline-flex;
@@ -76,87 +94,48 @@ a.link-brand:hover {
       <div class="card-body p-4 p-md-5">
         <!-- Header -->
         <div class="text-center mb-4">
-          <span class="brand-mark mb-3"><i class="bi bi-shield-lock"></i></span>
+          <span class="brand-mark mb-3"><img src="/favicon.ico" alt="" /></span>
           <h1 class="h4 fw-bold mb-1">Sign in to your account</h1>
           <p class="text-muted mb-0">
             Enter your email and password to continue.
           </p>
         </div>
-
-        <!-- Error message (show/hide from backend) -->
-        <div id="loginError" class="alert alert-danger d-none" role="alert">
-          These credentials do not match our records.
-        </div>
-
-        <!-- Login form -->
-        <form id="loginForm" action="/login" method="POST" novalidate>
-          <!-- CSRF token goes here -->
-
+        <form @submit.prevent="handleLogin">
           <div class="mb-3">
             <label for="email" class="form-label">Email address</label>
             <div class="input-group has-validation">
               <span class="input-group-text"
-                ><i class="bi bi-envelope"></i
+                ><i class="fa-solid fa-user"></i
               ></span>
               <input
                 type="email"
                 class="form-control"
-                id="email"
-                name="email"
+                v-model="email"
                 placeholder="name@example.com"
                 autocomplete="username"
                 required
-                autofocus
               />
-              <div class="invalid-feedback">Enter a valid email address.</div>
             </div>
           </div>
 
           <div class="mb-3">
             <div class="d-flex justify-content-between">
               <label for="password" class="form-label">Password</label>
-              <a href="/forgot-password" class="link-brand small"
-                >Forgot password?</a
-              >
             </div>
             <div class="input-group has-validation">
-              <span class="input-group-text"><i class="bi bi-lock"></i></span>
+              <span class="input-group-text"
+                ><i class="fa-solid fa-lock"></i
+              ></span>
               <input
                 type="password"
                 class="form-control"
-                id="password"
-                name="password"
+                v-model="password"
                 placeholder="Enter your password"
                 autocomplete="current-password"
                 required
-                minlength="8"
               />
-              <button
-                class="btn btn-outline-secondary"
-                type="button"
-                id="togglePassword"
-                aria-label="Show password"
-              >
-                <i class="bi bi-eye" id="togglePasswordIcon"></i>
-              </button>
-              <div class="invalid-feedback">
-                Password must be at least 8 characters.
-              </div>
             </div>
           </div>
-
-          <div class="form-check mb-4">
-            <input
-              class="form-check-input"
-              type="checkbox"
-              id="remember"
-              name="remember"
-            />
-            <label class="form-check-label" for="remember"
-              >Keep me signed in</label
-            >
-          </div>
-
           <button type="submit" class="btn btn-brand w-100 py-2">
             Sign in
           </button>

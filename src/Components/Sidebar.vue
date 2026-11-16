@@ -6,7 +6,7 @@
   >
     <div class="offcanvas-header border-bottom">
       <span class="fs-5 fw-bold text-rose"
-        ><i class="fa-solid fa-bars"></i>DateDrop</span
+        ><i class="bi bi-heart-fill me-2"></i>DateDrop</span
       >
       <button
         class="btn-close"
@@ -29,6 +29,15 @@
             ><i class="fa-solid fa-gauge"></i> Dashboard</a
           >
         </li>
+        <router-link to="/admin/places" class="nav-link" active-class="active"
+          ><i class="fa-solid fa-map-pin"></i> Places
+        </router-link>
+        <router-link
+          to="/admin/categories"
+          class="nav-link"
+          active-class="active"
+          ><i class="fa-solid fa-tags"></i> Categories
+        </router-link>
         <li>
           <a
             href="#"
@@ -37,16 +46,6 @@
             data-bs-dismiss="offcanvas"
             data-bs-target="#sidebar"
             ><i class="fa-solid fa-calendar-days"></i> Date Planner</a
-          >
-        </li>
-        <li>
-          <a
-            href="#"
-            class="nav-link"
-            data-go="places"
-            data-bs-dismiss="offcanvas"
-            data-bs-target="#sidebar"
-            ><i class="fa-solid fa-map-pin"></i> Destinations</a
           >
         </li>
         <li>
