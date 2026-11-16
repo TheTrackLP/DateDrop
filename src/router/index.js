@@ -7,6 +7,17 @@ const routes = [
     name: "Login",
     component: () => import("@/Auth/Login.vue"),
   },
+  {
+    path: "/admin",
+    component: () => import("@/Layout/AdminLayout.vue"),
+    children: [
+      {
+        path: "dashboard",
+        name: "AdminDashboard",
+        component: () => import("@/Pages/Admin/Dashboard.vue"),
+      },
+    ],
+  },
 ];
 
 const router = createRouter({
@@ -17,10 +28,10 @@ const router = createRouter({
   },
 });
 
-router.beforeEach(async (to) => {
-  if (to.meta.requiresAuth) {
-    const { data } = await supabase.auth.getSession();
-    if (!data.session) return { name: "Login" };
-  }
-});
+// router.beforeEach(async (to) => {
+//   if (to.meta.requiresAuth) {
+//     const { data } = await supabase.auth.getSession();
+//     if (!data.session) return { name: "Login" };
+//   }
+// });
 export default router;

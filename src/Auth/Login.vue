@@ -8,7 +8,7 @@
 body {
   background: var(--page-bg);
   min-height: 100vh;
-}asd
+}
 
 .login-wrapper {
   min-height: 100vh;
