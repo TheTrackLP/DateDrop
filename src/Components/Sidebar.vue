@@ -20,63 +20,25 @@
       </div>
       <ul class="nav nav-pills flex-column gap-1">
         <li>
-          <a
-            href="#"
-            class="nav-link active"
-            data-go="dashboard"
-            data-bs-dismiss="offcanvas"
-            data-bs-target="#sidebar"
-            ><i class="fa-solid fa-gauge"></i> Dashboard</a
-          >
-        </li>
-        <router-link to="/admin/places" class="nav-link" active-class="active"
-          ><i class="fa-solid fa-map-pin"></i> Places
-        </router-link>
-        <router-link
-          to="/admin/categories"
-          class="nav-link"
-          active-class="active"
-          ><i class="fa-solid fa-tags"></i> Categories
-        </router-link>
-        <li>
-          <a
-            href="#"
+          <router-link
+            to="/admin/dashboard"
             class="nav-link"
-            data-go="dates"
-            data-bs-dismiss="offcanvas"
-            data-bs-target="#sidebar"
-            ><i class="fa-solid fa-calendar-days"></i> Date Planner</a
+            exact-active-class="active"
+            ><i class="fa-solid fa-gauge"></i> Dashboard</router-link
           >
         </li>
         <li>
-          <a
-            href="#"
-            class="nav-link"
-            data-go="itinerary"
-            data-bs-dismiss="offcanvas"
-            data-bs-target="#sidebar"
-            ><i class="fa-solid fa-signs-post"></i> Itinerary</a
-          >
+          <router-link to="/admin/places" class="nav-link" active-class="active"
+            ><i class="fa-solid fa-map-pin"></i> Places
+          </router-link>
         </li>
         <li>
-          <a
-            href="#"
+          <router-link
+            to="/admin/categories"
             class="nav-link"
-            data-go="wishlist"
-            data-bs-dismiss="offcanvas"
-            data-bs-target="#sidebar"
-            ><i class="fa-solid fa-star"></i> Wishlist</a
-          >
-        </li>
-        <li>
-          <a
-            href="#"
-            class="nav-link"
-            data-go="budget"
-            data-bs-dismiss="offcanvas"
-            data-bs-target="#sidebar"
-            ><i class="fa-solid fa-wallet"></i> Budget &amp; Expenses</a
-          >
+            active-class="active"
+            ><i class="fa-solid fa-tags"></i> Categories
+          </router-link>
         </li>
         <li>
           <a
@@ -86,16 +48,6 @@
             data-bs-dismiss="offcanvas"
             data-bs-target="#sidebar"
             ><i class="fa-solid fa-book-journal-whills"></i> Memories</a
-          >
-        </li>
-        <li>
-          <a
-            href="#"
-            class="nav-link"
-            data-go="settings"
-            data-bs-dismiss="offcanvas"
-            data-bs-target="#sidebar"
-            ><i class="fa-solid fa-gear"></i> Settings</a
           >
         </li>
       </ul>
