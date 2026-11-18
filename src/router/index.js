@@ -26,6 +26,11 @@ const routes = [
         name: "Categories",
         component: () => import("@/Pages/Categories.vue"),
       },
+      {
+        path: "memories",
+        name: "Memories",
+        component: () => import("@/Pages/Memories.vue"),
+      },
     ],
     meta: { requiresAuth: true },
   },

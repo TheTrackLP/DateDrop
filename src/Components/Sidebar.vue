@@ -1,3 +1,7 @@
+<script setup lang="ts">
+import router from "@/router";
+</script>
+
 <template>
   <aside
     id="sidebar"
@@ -41,13 +45,12 @@
           </router-link>
         </li>
         <li>
-          <a
-            href="#"
+          <router-link
+            to="/admin/memories"
             class="nav-link"
-            data-go="memories"
-            data-bs-dismiss="offcanvas"
-            data-bs-target="#sidebar"
-            ><i class="fa-solid fa-book-journal-whills"></i> Memories</a
+            active-class="active"
+            ><i class="fa-solid fa-book-journal-whills"></i>
+            Memories</router-link
           >
         </li>
       </ul>

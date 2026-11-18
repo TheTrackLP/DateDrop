@@ -19,7 +19,6 @@ const handleLogin = async () => {
 
 <style>
 :root {
-  --brand-dark: #174739;
   --brand: #e0577a;
   --page-bg: linear-gradient(180deg, #f67280, #c06c84);
 }
@@ -60,8 +59,8 @@ body {
 
 .btn-brand:hover,
 .btn-brand:focus {
-  background: var(--brand-dark);
-  border-color: var(--brand-dark);
+  background: var(--brand);
+  border-color: var(--brand);
   color: #fff;
 }
 

@@ -1,0 +1,36 @@
+:root {
+  /* menu background (new + old variable names) */
+  --vs-menu-background-color: #fff;
+  --vs-menu-bg: #fff;
+
+  /* keep the menu above the Bootstrap modal (modal z-index is 1055) */
+  --vs-menu-z-index: 2000;
+
+  --vs-menu-height: 220px;
+  --vs-menu-border: 1px solid #f1dfe3;
+  --vs-menu-box-shadow: 0 8px 24px rgba(120, 60, 80, 0.15);
+
+  /* make the control match Bootstrap's .form-select */
+  --vs-border: 1px solid #dee2e6;
+  --vs-border-radius: 0.375rem;
+  --vs-min-height: 38px;
+  --vs-outline-color: #e0577a;
+}
+
+/* option rows: rose theme instead of the default blue */
+.menu-option {
+  padding: 0.55rem 0.75rem;
+}
+
+.menu-option:hover {
+  background: #e0577a !important;
+  color: #fff !important;
+}
+.menu-option.focused {
+  background: #fde8ee !important;
+  color: #3a2f33 !important;
+}
+.menu-option.selected {
+  background: #e0577a !important;
+  color: #fff !important;
+}
