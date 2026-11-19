@@ -17,16 +17,16 @@ const handleLogin = async () => {
   });
 
   const {
-    data: { userData },
+    data: { user },
   } = await supabase.auth.getUser();
 
-  const { data: user } = await supabase
+  const { data: userData } = await supabase
     .from("users")
     .select("role")
-    .eq("id", userData.id)
+    .eq("id", user.id)
     .single();
 
-  if (user?.role !== "admin") {
+  if (userData?.role !== "admin") {
     await supabase.auth.signOut();
     router.push({ name: "Login" });
     return;

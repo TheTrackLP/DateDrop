@@ -20,7 +20,7 @@ body {
 }
 
 .sidebar {
-  width: 230px !important;
+  width: 260px !important;
   min-height: 100vh;
   background-image: var(--sb-bg);
   color: var(--sb-text);

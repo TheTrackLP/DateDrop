@@ -292,12 +292,12 @@ const filteredPlaces = computed(() => {
           >
             <span
               class="badge rounded-pill text-bg-warning"
-              v-if="place.status === 'wishlist'"
+              v-if="place.status === 'Wishlist'"
               >Wishlist</span
             >
             <span
               class="badge rounded-pill text-bg-success"
-              v-else-if="place.status === 'visited'"
+              v-else-if="place.status === 'Visited'"
               >Visited</span
             >
             <div

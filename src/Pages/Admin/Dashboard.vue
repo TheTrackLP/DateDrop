@@ -8,6 +8,8 @@ const placesList = ref([]);
 const categoriesList = ref([]);
 const totalPlaces = ref(null);
 const totalMemories = ref(null);
+const totalWishlist = ref(null);
+const totalVisited = ref(null);
 
 const fetchListings = async () => {
   const { data: places } = await supabase
@@ -20,6 +22,16 @@ const fetchListings = async () => {
     .from("places")
     .select("*", { count: "exact", head: true });
 
+  const { count: wishlistCount } = await supabase
+    .from("places")
+    .select("*", { count: "exact", head: true })
+    .eq("status", "Wishlist");
+
+  const { count: visitCount } = await supabase
+    .from("places")
+    .select("*", { count: "exact", head: true })
+    .eq("status", "Visited");
+
   const { data: memories } = await supabase
     .from("memories")
     .select(`*, places (name)`)
@@ -30,11 +42,21 @@ const fetchListings = async () => {
     .from("memories")
     .select("*", { count: "exact", head: true });
 
-  const { data: categories } = await supabase.from("categories").select("*");
+  const { data: categories } = await supabase
+    .from("categories")
+    .select(
+      `*,     
+        total:places(count),
+        visited:places!left(count)
+    `,
+    )
+    .eq("visited.status", "Visited");
 
   categoriesList.value = categories;
   totalPlaces.value = placeCount;
   totalMemories.value = memoriesCount;
+  totalWishlist.value = wishlistCount;
+  totalVisited.value = visitCount;
   placesList.value = places;
   memoriesList.value = memories;
 };
@@ -74,7 +96,7 @@ onMounted(fetchListings);
             >
             <div>
               <div class="text-muted small">Visited</div>
-              <div class="h4 mb-0">11</div>
+              <div class="h4 mb-0">{{ totalVisited }}</div>
             </div>
           </div>
         </div>
@@ -88,7 +110,7 @@ onMounted(fetchListings);
             >
             <div>
               <div class="text-muted small">On the wishlist</div>
-              <div class="h4 mb-0">14</div>
+              <div class="h4 mb-0">{{ totalWishlist }}</div>
             </div>
           </div>
         </div>
@@ -131,22 +153,20 @@ onMounted(fetchListings);
                 :key="index"
               >
                 <div class="d-flex justify-content-between small mb-1">
-                  <span>{{ category.icon }} {{ category.name }}</span
-                  ><span class="text-muted">2 of 5 visited</span>
+                  <span>{{ category.icon }} {{ category.name }}</span>
+
+                  <span class="text-muted"
+                    >{{ category.visited?.[0]?.count }} of
+                    {{ category.total?.[0]?.count }} visited</span
+                  >
                 </div>
-                <div
-                  class="progress"
-                  style="height: 8px"
-                  role="progressbar"
-                  aria-label="Beach visited"
-                  aria-valuenow="40"
-                  aria-valuemin="0"
-                  aria-valuemax="100"
-                >
+                <div class="progress" style="height: 8px" role="progressbar">
                   <div
                     class="progress-bar"
-                    style="width: 40%"
-                    :style="{ backgroundColor: category.color }"
+                    :style="{
+                      backgroundColor: category.color,
+                      width: `${category.total?.[0]?.count ? (category.visited?.[0]?.count / category.total?.[0]?.count) * 100 : 0}`,
+                    }"
                   ></div>
                 </div>
               </div>
