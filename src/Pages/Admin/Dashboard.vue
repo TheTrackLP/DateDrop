@@ -45,7 +45,7 @@ const fetchListings = async () => {
   const { data: categories } = await supabase
     .from("categories")
     .select(
-      `*,     
+      `*,
         total:places(count),
         visited:places!left(count)
     `,
@@ -62,6 +62,12 @@ const fetchListings = async () => {
 };
 
 onMounted(fetchListings);
+
+const progressBarPresent = (c) => {
+  const total = c.total?.[0]?.count ?? 0;
+  const visited = c.visited?.[0]?.count ?? 0;
+  return total ? Math.round((visited / total) * 100) : 0;
+};
 </script>
 <style>
 .category-response {
@@ -165,7 +171,7 @@ onMounted(fetchListings);
                     class="progress-bar"
                     :style="{
                       backgroundColor: category.color,
-                      width: `${category.total?.[0]?.count ? (category.visited?.[0]?.count / category.total?.[0]?.count) * 100 : 0}`,
+                      width: progressBarPresent(category) + '%',
                     }"
                   ></div>
                 </div>
