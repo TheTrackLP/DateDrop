@@ -16,3 +16,8 @@ export const closeModal = (modalRef) => {
     modalInstance?.hide();
   });
 };
+
+export const formattedDate = (dateFormate) => {
+  const options = { year: "numeric", month: "long", day: "numeric" };
+  return new Date(dateFormate).toLocaleDateString("en-US", options);
+};

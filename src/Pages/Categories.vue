@@ -193,7 +193,7 @@ const changedStatus = async (row) => {
         </div>
       </div>
 
-      <div class="table-responsive">
+      <div class="table-responsive" v-if="filterText.length > 0">
         <table class="table table-hover align-middle mb-0">
           <thead class="table-info">
             <tr>
@@ -266,14 +266,13 @@ const changedStatus = async (row) => {
         </table>
       </div>
 
-      <!-- Empty state (swap in when there are no categories)
-          <div class="text-center py-5" role="status">
-            <i class="bi bi-tags fs-1 text-muted"></i>
-            <h2 class="h5 mt-3">No categories yet</h2>
-            <p class="text-muted">Create a category to start grouping your places.</p>
-            <button type="button" class="btn btn-rose" data-bs-toggle="modal" data-bs-target="#categoryModal">Add category</button>
-          </div>
-          -->
+      <div class="text-center py-5" role="status" v-else>
+        <i class="bi bi-tags fs-1 text-muted"></i>
+        <h2 class="h5 mt-3">No categories yet</h2>
+        <p class="text-muted">
+          Create a category to start grouping your places.
+        </p>
+      </div>
     </div>
   </div>
 

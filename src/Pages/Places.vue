@@ -189,7 +189,8 @@ const filteredPlaces = computed(() => {
 <style>
 .card-responsive {
   height: 600px;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 </style>
 <template>
@@ -265,7 +266,8 @@ const filteredPlaces = computed(() => {
       >
         <article class="card h-100 shadow-sm">
           <div
-            class="bg-info-subtle text-info-emphasis d-flex justify-content-between align-items-center px-3 py-2 rounded-top"
+            class="text-white d-flex justify-content-between align-items-center px-3 py-2 rounded-top"
+            :style="{ backgroundColor: place.categories?.color }"
           >
             <span class="fw-semibold"
               >{{ place.categories?.icon }} {{ place.categories?.name }}</span
@@ -318,15 +320,6 @@ const filteredPlaces = computed(() => {
                 @click="fetchPlaceInfo(place)"
               >
                 <i class="fa-solid fa-pencil"></i>
-              </button>
-              <button
-                type="button"
-                class="btn btn-outline-danger"
-                aria-label="Delete Baybay Sunset Walk"
-                data-bs-toggle="modal"
-                data-bs-target="#deleteModal"
-              >
-                <i class="fa-solid fa-toggle-on"></i>
               </button>
             </div>
           </div>
