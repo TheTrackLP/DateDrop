@@ -45,9 +45,33 @@ const router = createRouter({
 });
 
 router.beforeEach(async (to) => {
-  if (to.meta.requiresAuth) {
-    const { data } = await supabase.auth.getSession();
-    if (!data.session) return { name: "Login" };
+  const needAuths = to.meta.requiresAuth;
+  const isLogin = to.name === "Login";
+
+  if (!needAuths && !isLogin) return;
+
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (!session) {
+    return needAuths ? { name: "Login" } : undefined;
+  }
+
+  const { data: profile, error } = await supabase
+    .from("users")
+    .select("role")
+    .eq("id", session.user.id)
+    .maybeSingle();
+
+  const isAdmin = profile?.role === "admin";
+
+  if (isLogin) {
+    return isAdmin ? { name: "AdminDashboard" } : undefined;
+  }
+
+  if (needAuths && !isAdmin) {
+    return { name: "Login" };
   }
 });
 export default router;

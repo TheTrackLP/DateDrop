@@ -6,12 +6,33 @@ import { useRouter } from "vue-router";
 const email = ref("");
 const password = ref("");
 const router = useRouter();
+const loading = ref(false);
 
 const handleLogin = async () => {
+  loading.value = true;
+
   const { error } = await supabase.auth.signInWithPassword({
     email: email.value,
     password: password.value,
   });
+
+  const {
+    data: { userData },
+  } = await supabase.auth.getUser();
+
+  const { data: user } = await supabase
+    .from("users")
+    .select("role")
+    .eq("id", userData.id)
+    .single();
+
+  if (user?.role !== "admin") {
+    await supabase.auth.signOut();
+    router.push({ name: "Login" });
+    return;
+  }
+
+  loading.value = false;
 
   router.push({ name: "AdminDashboard" });
 };
@@ -136,7 +157,7 @@ a.link-brand:hover {
             </div>
           </div>
           <button type="submit" class="btn btn-brand w-100 py-2">
-            Sign in
+            {{ loading ? "Loggin in..." : "Sign in" }}
           </button>
         </form>
 
