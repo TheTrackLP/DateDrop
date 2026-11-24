@@ -37,6 +37,11 @@ import router from "@/router";
           </router-link>
         </li>
         <li>
+          <router-link to="/admin/maps" class="nav-link" active-class="active"
+            ><i class="fa-solid fa-map"></i> Maps
+          </router-link>
+        </li>
+        <li>
           <router-link
             to="/admin/categories"
             class="nav-link"

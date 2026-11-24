@@ -17,6 +17,8 @@ const placeForm = ref({
   link: "",
   notes: "",
   status: "",
+  lat: "",
+  lng: "",
 });
 
 const openFormModal = () => {
