@@ -25,7 +25,6 @@ const closeFormModal = () => {
     icon: "",
     color: "",
     description: "",
-    status: "",
   };
 };
 
