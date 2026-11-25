@@ -28,12 +28,18 @@ const closeFormModal = () => {
   };
 };
 
+const totalCategories = ref("");
 const categoriesList = ref([]);
 const fetchCategories = async () => {
   const { data: categories, error } = await supabase
     .from("categories")
     .select("*");
   categoriesList.value = categories;
+
+  const { count: countCategory } = await supabase
+    .from("categories")
+    .select("*", { count: "exact", head: true });
+  totalCategories.value = countCategory;
 };
 
 onMounted(fetchCategories);
@@ -169,7 +175,8 @@ const changedStatus = async (row) => {
       <h1 class="h3 mb-1">Categories</h1>
       <p class="text-muted mb-0">
         Organize your places by type.
-        <strong class="text-body">6</strong> categories in total.
+        <strong class="text-body">{{ totalCategories }}</strong> categories in
+        total.
       </p>
     </div>
     <button type="button" class="btn btn-rose" @click="openFormModal">

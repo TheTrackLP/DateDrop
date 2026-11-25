@@ -51,15 +51,22 @@ const placesOptions = computed(() =>
 
 onMounted(fetchPlacesList);
 
+const totalMemories = ref("");
 const memoriesList = ref([]);
-const fetchMemoriesList = async () => {
+const fetchMemoriesInfo = async () => {
   const { data: memories } = await supabase
     .from("memories")
     .select(`*, places (name)`);
   memoriesList.value = memories;
+
+  const { count: countMemories } = await supabase
+    .from("memories")
+    .select("*", { count: "exact", head: true });
+
+  totalMemories.value = countMemories;
 };
 
-onMounted(fetchMemoriesList);
+onMounted(fetchMemoriesInfo);
 
 const fetchMemoryData = async (memory) => {
   const { data: memories } = await supabase
@@ -96,7 +103,7 @@ const handleFormSubmit = async () => {
     }
 
     closeFormModal();
-    await fetchMemoriesList();
+    await fetchMemoriesInfo();
 
     Swal.fire({
       title: "Success",
@@ -129,7 +136,7 @@ const handleFormSubmit = async () => {
     }
 
     closeFormModal();
-    await fetchMemoriesList();
+    await fetchMemoriesInfo();
 
     Swal.fire({
       title: "Success",
@@ -181,8 +188,8 @@ const filterMemory = computed(() => {
     <div>
       <h1 class="h3 mb-1">Memories</h1>
       <p class="text-muted mb-0">
-        Moments worth keeping. <strong class="text-body">6</strong> memories so
-        far.
+        Moments worth keeping.
+        <strong class="text-body">{{ totalMemories }}</strong> memories so far.
       </p>
     </div>
     <button type="button" class="btn btn-rose" @click="openFormModal">

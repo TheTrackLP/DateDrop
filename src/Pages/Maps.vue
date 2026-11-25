@@ -7,19 +7,44 @@ import {
   LPopup,
   LIcon,
 } from "@vue-leaflet/vue-leaflet";
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { supabase } from "@/Lib/supabase";
 
 const placesList = ref([]);
-const fetchPlaceLists = async () => {
+const categoriesList = ref([]);
+const fetchModulesData = async () => {
   const { data: places } = await supabase
     .from("places")
-    .select(`*, categories (color, icon)`)
-    .limit(1);
+    .select(`*, categories (name, color, icon)`);
   placesList.value = places;
+
+  const { data: categories } = await supabase.from("categories").select("*");
+  categoriesList.value = categories;
 };
 
-onMounted(fetchPlaceLists);
+const categoriesOptions = computed(() => {
+  return categoriesList.value.map((m) => ({ label: m.name, value: m.id }));
+});
+
+onMounted(fetchModulesData);
+
+const selectedStatus = ref("");
+const selectedCategory = ref("");
+const selectedPlaceName = ref("");
+const filteredPlaces = computed(() => {
+  const statusQuery = selectedStatus.value;
+  const categoryQuery = selectedCategory.value;
+  const placeNameQuery = selectedPlaceName.value.toLowerCase().trim();
+
+  return placesList.value.filter((p) => {
+    const matchStatus = !statusQuery || p.status === statusQuery;
+    const matchCategory = !categoryQuery || p.category_id === categoryQuery;
+    const matchPlaceName =
+      !placeNameQuery || p.name.toLowerCase().includes(placeNameQuery);
+
+    return matchPlaceName && matchCategory && matchStatus;
+  });
+});
 </script>
 
 <style>
@@ -38,47 +63,17 @@ onMounted(fetchPlaceLists);
     linear-gradient(rgba(255, 255, 255, 0.8) 2px, transparent 2px);
   background-size: 90px 90px;
 }
-.sea {
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 30%;
-  background: #aad3df;
-  clip-path: polygon(0 0, 100% 0, 70% 35%, 85% 70%, 60% 100%, 0 100%);
-}
-.placeholder-tag {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  pointer-events: none;
-}
-.overlay-top {
-  position: absolute;
-  top: 0.75rem;
-  left: 0.75rem;
-  right: 0.75rem;
-  z-index: 5;
-}
-.chips {
-  overflow-x: auto;
-  white-space: nowrap;
-  scrollbar-width: none;
-}
-.chips::-webkit-scrollbar {
-  display: none;
-}
 .pin {
-  --c: #0284c7;
   position: absolute;
-  width: 44px;
-  height: 44px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   transform: translate(-50%, -50%);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.2rem;
-  border: 3px solid var(--c);
+  font-size: 1rem;
+  border: 1px solid black;
   background: #fff;
   padding: 0;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
@@ -87,17 +82,15 @@ onMounted(fetchPlaceLists);
   background: var(--c);
   border-color: #fff;
 }
-.pin.active {
-  transform: translate(-50%, -50%) scale(1.2);
-  z-index: 3;
-  outline: 3px solid rgba(224, 87, 122, 0.45);
+.places-panel {
+  width: 340px !important;
 }
-.map-controls {
-  position: absolute;
-  right: 0.75rem;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 5;
+.places-list {
+  overflow-y: auto;
+}
+.filters {
+  position: relative;
+  z-index: 1000;
 }
 .place-card {
   position: absolute;
@@ -107,26 +100,21 @@ onMounted(fetchPlaceLists);
   width: min(380px, calc(100% - 1.5rem));
   z-index: 5;
 }
-.attribution {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  z-index: 4;
-  font-size: 0.7rem;
-  background: rgba(255, 255, 255, 0.8);
-  padding: 0 0.4rem;
+.overlay-top {
+  position: relative;
+  transform: translateY(50%);
+  padding-left: -2rem;
+  z-index: 1020;
 }
-.legend {
-  position: absolute;
-  left: 0.75rem;
-  bottom: 1.5rem;
-  z-index: 4;
+.leaflet-control-zoom {
+  position: relative;
+  transform: translateY(300%);
+  z-index: 1000;
 }
-.places-panel {
-  width: 340px !important;
-}
-.places-list {
+.card-responsive {
+  height: 640px;
   overflow-y: auto;
+  overflow-x: hidden;
 }
 @media (max-width: 991.98px) {
   .legend {
@@ -140,15 +128,30 @@ onMounted(fetchPlaceLists);
     <!-- ============ MAP AREA ============ -->
     <section class="map-wrap flex-grow-1" aria-label="Places map">
       <!-- Leaflet will render into #map. Everything inside it is a static preview. -->
+      <div class="overlay-top">
+        <div class="d-flex gap-2 mb-2">
+          <div class="input-group shadow-sm">
+            <span class="input-group-text bg-white border-end-0"
+              ><i class="fa-solid fa-magnifying-glass"></i
+            ></span>
+            <input
+              type="search"
+              class="form-control border-start-0"
+              placeholder="Search places on the map"
+              aria-label="Search places on the map"
+              v-model="selectedPlaceName"
+            />
+          </div>
+        </div>
+      </div>
       <div id="map">
-        ,
         <l-map :zoom="12" :center="[11.442920744150456, 122.75913187334166]">
           <l-tile-layer
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
 
           <l-marker
-            v-for="row in placesList"
+            v-for="row in filteredPlaces"
             :key="row.id"
             :lat-lng="[row.lat, row.lng]"
           >
@@ -164,9 +167,34 @@ onMounted(fetchPlaceLists);
             </l-icon>
 
             <l-popup>
-              <strong>{{ row.name }}</strong
-              ><br />
-              {{ row.address }}
+              <div
+                class="d-flex justify-content-between align-items-start gap-2"
+              >
+                <div class="text-break">
+                  <span
+                    class="badge mb-1"
+                    :style="{ backgroundColor: row.categories?.color }"
+                    >{{ row.categories?.icon }} {{ row.categories?.name }}</span
+                  >
+                  <h2 class="h6 mb-1">{{ row.name }}</h2>
+                  <p class="small text-muted mb-2">📍 {{ row.address }}</p>
+                </div>
+              </div>
+              <div class="d-flex flex-wrap gap-2 align-items-center">
+                <span
+                  class="badge rounded-pill text-bg-success"
+                  v-if="row.status === 'Visited'"
+                  >Visited</span
+                >
+                <span
+                  class="badge rounded-pill text-bg-warning"
+                  v-else-if="row.status === 'Wishlist'"
+                  >Wishlist</span
+                >
+                <span class="small text-muted"
+                  >{{ row.price_range }} · {{ row.hours }}</span
+                >
+              </div>
             </l-popup>
           </l-marker>
         </l-map>
@@ -195,113 +223,62 @@ onMounted(fetchPlaceLists);
       </div>
       <div class="offcanvas-body d-flex flex-column p-0">
         <div class="p-3 border-bottom">
-          <div class="row g-2">
+          <div class="row filters g-2">
             <div class="col-6">
-              <label for="pStatus" class="visually-hidden">Status</label
-              ><select id="pStatus" class="form-select form-select-sm">
-                <option>Any status</option>
-                <option>Visited</option>
-                <option>Wishlist</option>
+              <select id="pStatus" class="form-select" v-model="selectedStatus">
+                <option value="">Any status</option>
+                <option value="Visited">Visited</option>
+                <option value="Wishlist">Wishlist</option>
               </select>
             </div>
             <div class="col-6">
-              <label for="pSort" class="visually-hidden">Sort</label
-              ><select id="pSort" class="form-select form-select-sm">
-                <option>Name A–Z</option>
-                <option>Newest first</option>
-              </select>
+              <v-select
+                :options="categoriesOptions"
+                v-model="selectedCategory"
+                placeholder="All Places"
+              ></v-select>
             </div>
           </div>
         </div>
-        <div class="list-group list-group-flush places-list flex-grow-1">
-          <button
-            type="button"
-            class="list-group-item list-group-item-action d-flex align-items-center gap-3 py-3 active"
-            style="background: #fde8ee; border-color: #f1dfe3; color: inherit"
-          >
-            <span class="fs-4">☕</span
-            ><span class="flex-grow-1 text-start text-truncate"
-              ><span class="d-block fw-semibold text-truncate"
-                >Café Terraza</span
-              ><small class="text-muted">Cafe · Lawa-an</small></span
-            ><span class="badge rounded-pill text-bg-success">Visited</span>
-          </button>
-          <button
-            type="button"
-            class="list-group-item list-group-item-action d-flex align-items-center gap-3 py-3"
-          >
-            <span class="fs-4">🏖️</span
-            ><span class="flex-grow-1 text-start text-truncate"
-              ><span class="d-block fw-semibold text-truncate"
-                >Baybay Beach</span
-              ><small class="text-muted">Beach · Baybay</small></span
-            ><span class="badge rounded-pill text-bg-success">Visited</span>
-          </button>
-          <button
-            type="button"
-            class="list-group-item list-group-item-action d-flex align-items-center gap-3 py-3"
-          >
-            <span class="fs-4">🏖️</span
-            ><span class="flex-grow-1 text-start text-truncate"
-              ><span class="d-block fw-semibold text-truncate"
-                >Mantalinga Island</span
-              ><small class="text-muted">Beach · Off Baybay</small></span
-            ><span class="badge rounded-pill text-bg-warning">Wishlist</span>
-          </button>
-          <button
-            type="button"
-            class="list-group-item list-group-item-action d-flex align-items-center gap-3 py-3"
-          >
-            <span class="fs-4">🍽️</span
-            ><span class="flex-grow-1 text-start text-truncate"
-              ><span class="d-block fw-semibold text-truncate">Timplado</span
-              ><small class="text-muted">Food · Baybay</small></span
-            ><span class="badge rounded-pill text-bg-success">Visited</span>
-          </button>
-          <button
-            type="button"
-            class="list-group-item list-group-item-action d-flex align-items-center gap-3 py-3"
-          >
-            <span class="fs-4">🍽️</span
-            ><span class="flex-grow-1 text-start text-truncate"
-              ><span class="d-block fw-semibold text-truncate"
-                >Villa Consorcia Resort and Restaurant</span
-              ><small class="text-muted">Food · Roxas City</small></span
-            ><span class="badge rounded-pill text-bg-warning">Wishlist</span>
-          </button>
-          <button
-            type="button"
-            class="list-group-item list-group-item-action d-flex align-items-center gap-3 py-3"
-          >
-            <span class="fs-4">🏨</span
-            ><span class="flex-grow-1 text-start text-truncate"
-              ><span class="d-block fw-semibold text-truncate"
-                >San Antonio Resort</span
-              ><small class="text-muted">Staycation · Baybay</small></span
-            ><span class="badge rounded-pill text-bg-warning">Wishlist</span>
-          </button>
-          <button
-            type="button"
-            class="list-group-item list-group-item-action d-flex align-items-center gap-3 py-3"
-          >
-            <span class="fs-4">⛪</span
-            ><span class="flex-grow-1 text-start text-truncate"
-              ><span class="d-block fw-semibold text-truncate"
-                >Old Capiz Bridge</span
-              ><small class="text-muted">Heritage · Arsobispo St.</small></span
-            ><span class="badge rounded-pill text-bg-success">Visited</span>
-          </button>
-          <button
-            type="button"
-            class="list-group-item list-group-item-action d-flex align-items-center gap-3 py-3"
-          >
-            <span class="fs-4">⛪</span
-            ><span class="flex-grow-1 text-start text-truncate"
-              ><span class="d-block fw-semibold text-truncate"
-                >Roxas City Plaza</span
-              ><small class="text-muted">Heritage · Roxas City</small></span
-            ><span class="badge rounded-pill text-bg-success">Visited</span>
-          </button>
+        <div class="card-responsive" v-if="filteredPlaces.length > 0">
+          <div class="list-group list-group-flush places-list flex-grow-1">
+            <button
+              type="button"
+              class="list-group-item list-group-item-action d-flex align-items-center gap-3 py-3"
+              active-class="active"
+              style="border-color: #f1dfe3; color:"
+              v-for="(place, index) in filteredPlaces"
+              :key="index"
+            >
+              <span class="fs-4">{{ place.categories?.icon }}</span
+              ><span class="flex-grow-1 text-start text-truncate"
+                ><span class="d-block fw-semibold text-truncate">{{
+                  place.name
+                }}</span
+                ><small class="text-muted"
+                  >{{ place.categories?.name }} · {{ place.address }}</small
+                ></span
+              >
+              <span
+                class="badge rounded-pill text-bg-success"
+                v-if="place.status === 'Visited'"
+                >Visited</span
+              >
+              <span
+                class="badge rounded-pill text-bg-warning"
+                v-else-if="place.status === 'Wishlist'"
+                >Wishlist</span
+              >
+            </button>
+          </div>
+        </div>
+        <div class="text-center py-5" role="status" v-else>
+          <i class="bi bi-geo-alt fs-1 text-muted"></i>
+          <h2 class="h5 mt-3">No places yet</h2>
+          <p class="text-muted">Add your first place to start planning.</p>
+          <router-link class="btn btn-rose" to="/admin/places">
+            Add place
+          </router-link>
         </div>
       </div>
     </aside>

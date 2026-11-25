@@ -151,7 +151,7 @@ const progressBarPresent = (c) => {
               >Manage categories</router-link
             >
           </div>
-          <div class="category-response">
+          <div class="category-response" v-if="categoriesList.length > 0">
             <div class="card-body">
               <div
                 class="mb-3"
@@ -177,6 +177,16 @@ const progressBarPresent = (c) => {
                 </div>
               </div>
             </div>
+          </div>
+          <div class="text-center py-5" role="status" v-else>
+            <i class="bi bi-tags fs-1 text-muted"></i>
+            <h2 class="h5 mt-3">No categories yet</h2>
+            <p class="text-muted">
+              Create a category to start grouping your places.
+            </p>
+            <router-link class="btn btn-rose" to="/admin/categories">
+              Add Categories
+            </router-link>
           </div>
         </div>
       </div>
@@ -222,7 +232,7 @@ const progressBarPresent = (c) => {
               >View all</router-link
             >
           </div>
-          <ul class="list-group list-group-flush">
+          <ul class="list-group list-group-flush" v-if="placesList.length > 0">
             <li
               class="list-group-item d-flex align-items-center gap-3 py-3"
               v-for="(place, index) in placesList"
@@ -250,6 +260,16 @@ const progressBarPresent = (c) => {
               >
             </li>
           </ul>
+          <ul v-else>
+            <div class="text-center py-5" role="status">
+              <i class="bi bi-geo-alt fs-1 text-muted"></i>
+              <h2 class="h5 mt-3">No places yet</h2>
+              <p class="text-muted">Add your first place to start planning.</p>
+              <router-link class="btn btn-rose" to="/admin/places">
+                Add place
+              </router-link>
+            </div>
+          </ul>
         </div>
       </div>
 
@@ -266,7 +286,10 @@ const progressBarPresent = (c) => {
               >View all</router-link
             >
           </div>
-          <ul class="list-group list-group-flush">
+          <ul
+            class="list-group list-group-flush"
+            v-if="memoriesList.length > 0"
+          >
             <li
               class="list-group-item py-3"
               v-for="(memory, index) in memoriesList"
@@ -292,6 +315,18 @@ const progressBarPresent = (c) => {
                 >
               </div>
             </li>
+          </ul>
+          <ul v-else>
+            <div class="text-center py-5" role="status">
+              <i class="bi bi-tags fs-1 text-muted"></i>
+              <h2 class="h5 mt-3">No memories yet</h2>
+              <p class="text-muted">
+                After a date, save a few words and a link to your photos.
+              </p>
+              <router-link class="btn btn-rose" to="/admin/memories">
+                Add Memories
+              </router-link>
+            </div>
           </ul>
         </div>
       </div>

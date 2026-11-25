@@ -17,8 +17,7 @@ const placeForm = ref({
   link: "",
   notes: "",
   status: "",
-  lat: "",
-  lng: "",
+  pinpoint: "",
 });
 
 const openFormModal = () => {
@@ -68,6 +67,7 @@ const closeFormModal = () => {
     link: "",
     notes: "",
     status: "",
+    pinpoint: "",
   };
 };
 
@@ -82,20 +82,46 @@ const categoryOptions = computed(() =>
 
 onMounted(fetchCategories);
 
+const totalPlaces = ref("");
+const totalVisited = ref("");
+const totalWishlist = ref("");
 const placesList = ref([]);
-const fetchPlacesList = async () => {
+const fetchPlacesInfo = async () => {
   const { data, error } = await supabase
     .from("places")
     .select(`*, categories (name, icon, color)`);
   placesList.value = data;
+
+  const { count: savedPlace } = await supabase
+    .from("places")
+    .select("*", { count: "exact", head: true });
+
+  const { count: countVisited } = await supabase
+    .from("places")
+    .select("status", { count: "exact", head: true })
+    .eq("status", "Visited");
+
+  const { count: countWishlist } = await supabase
+    .from("places")
+    .select("status", { count: "exact", head: true })
+    .eq("status", "Wishlist");
+
+  totalPlaces.value = savedPlace;
+  totalVisited.value = countVisited;
+  totalWishlist.value = countWishlist;
 };
 
-onMounted(fetchPlacesList);
+onMounted(fetchPlacesInfo);
+
+const latPoint = ref("");
+const lngPoint = ref("");
 
 const placeFormSubmit = async () => {
   if (placeFormMode.value === "create") {
     placeFormMode.value = "create";
-
+    const [lat, lng] = placeForm.value.pinpoint.split(/[,]+/);
+    latPoint.value = lat;
+    lngPoint.value = lng;
     const { error } = await supabase.from("places").insert({
       name: placeForm.value.name,
       category_id: placeForm.value.category_id,
@@ -106,6 +132,8 @@ const placeFormSubmit = async () => {
       link: placeForm.value.link,
       notes: placeForm.value.notes,
       status: placeForm.value.status,
+      lat: lat,
+      lng: lng,
     });
 
     if (error) {
@@ -116,7 +144,7 @@ const placeFormSubmit = async () => {
       });
     }
     closeFormModal();
-    await fetchPlacesList();
+    await fetchPlacesInfo();
     Swal.fire({
       title: "Success",
       text: "Success, Place Added",
@@ -149,7 +177,7 @@ const placeFormSubmit = async () => {
       });
     }
     closeFormModal();
-    await fetchPlacesList();
+    await fetchPlacesInfo();
     Swal.fire({
       title: "Success",
       text: "Success, Place Updated",
@@ -174,19 +202,46 @@ const fetchPlaceInfo = async (place) => {
 const selectedText = ref("");
 const selectedCategory = ref("");
 const selectedStatus = ref("");
+const selectedFavorite = ref(false);
 const filteredPlaces = computed(() => {
   const textQuery = selectedText.value.toLowerCase().trim();
   const categoryQuery = selectedCategory.value;
   const statusQuery = selectedStatus.value;
+  const favoriteQuery = selectedFavorite.value;
 
   return placesList.value.filter((p) => {
     const matchText = !textQuery || p.name.toLowerCase().includes(textQuery);
     const matchCategory = !categoryQuery || p.category_id === categoryQuery;
     const matchStatus = !statusQuery || p.status === statusQuery;
+    const matchFavorite = !favoriteQuery || p.favorite === favoriteQuery;
 
-    return matchText && matchCategory && matchStatus;
+    return matchText && matchCategory && matchStatus && matchFavorite;
   });
 });
+
+const clearFilters = () => {
+  selectedText.value = "";
+  selectedCategory.value = "";
+  selectedStatus.value = "";
+  selectedFavorite.value = false;
+};
+
+const changeFavorite = async (place) => {
+  const newStatus = !place.favorite;
+
+  const { error } = await supabase
+    .from("places")
+    .update({ favorite: newStatus })
+    .eq("id", place.id);
+  place.favorite = newStatus;
+  Swal.fire({
+    title: "Success!",
+    text: "Favorite Changed",
+    icon: "success",
+    timer: 1500,
+    showConfirmButton: false,
+  });
+};
 </script>
 <style>
 .card-responsive {
@@ -202,9 +257,16 @@ const filteredPlaces = computed(() => {
     <div>
       <h1 class="h3 mb-2">Places</h1>
       <div class="d-flex flex-wrap gap-3 text-muted small">
-        <span><strong class="text-body">6</strong> saved</span>
-        <span><strong class="text-body">3</strong> visited</span>
-        <span><strong class="text-body">3</strong> on the wishlist</span>
+        <span
+          ><strong class="text-body">{{ totalPlaces }}</strong> saved</span
+        >
+        <span
+          ><strong class="text-body">{{ totalVisited }}</strong> visited</span
+        >
+        <span
+          ><strong class="text-body">{{ totalWishlist }}</strong> on the
+          wishlist</span
+        >
       </div>
     </div>
     <button type="button" class="btn btn-rose" @click="openFormModal">
@@ -215,13 +277,15 @@ const filteredPlaces = computed(() => {
   <!-- Filters -->
   <div class="card mb-4">
     <div class="card-body">
-      <form class="row g-2" onsubmit="return false;">
+      <div class="row g-3 align-items-center">
+        <!-- Search -->
         <div class="col-12 col-md-5">
-          <label for="fSearch" class="visually-hidden">Search places</label>
+          <label for="fSearch" class="visually-hidden"> Search places </label>
           <div class="input-group">
-            <span class="input-group-text bg-white"
-              ><i class="fa-solid fa-magnifying-glass"></i></span
-            ><input
+            <span class="input-group-text bg-white">
+              <i class="fa-solid fa-magnifying-glass"></i>
+            </span>
+            <input
               type="search"
               id="fSearch"
               class="form-control"
@@ -230,36 +294,49 @@ const filteredPlaces = computed(() => {
             />
           </div>
         </div>
-        <div class="col-6 col-md-2">
-          <label for="fCategory" class="visually-hidden">Category</label>
+        <div class="col-12 col-sm-6 col-md-2">
+          <label for="fCategory" class="visually-hidden"> Category </label>
           <VueSelect
             :options="categoryOptions"
             placeholder="Select Category"
             v-model="selectedCategory"
           />
         </div>
-        <div class="col-6 col-md-2">
-          <label for="fStatus" class="visually-hidden">Status</label
-          ><select id="fStatus" v-model="selectedStatus" class="form-select">
+        <div class="col-12 col-sm-6 col-md-2">
+          <label for="fStatus" class="visually-hidden"> Status </label>
+          <select id="fStatus" v-model="selectedStatus" class="form-select">
             <option value="">Any status</option>
-            <option>Wishlist</option>
-            <option>Visited</option>
+            <option value="Wishlist">Wishlist</option>
+            <option value="Visited">Visited</option>
           </select>
         </div>
-
-        <div class="col-4 col-md-1 d-grid">
+        <div class="col-6 col-md-2">
+          <div class="form-check form-switch mb-0">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              role="switch"
+              id="fFavorite"
+              v-model="selectedFavorite"
+            />
+            <label class="form-check-label" for="fFavorite"> Favorite </label>
+          </div>
+        </div>
+        <div class="col-6 col-md-1">
           <button
-            type="reset"
-            class="btn btn-outline-secondary px-5"
+            type="button"
+            class="btn btn-outline-secondary w-100"
             aria-label="Clear filters"
+            @click="clearFilters"
           >
             Clear
           </button>
         </div>
-      </form>
+      </div>
     </div>
   </div>
-  <div class="card-responsive">
+
+  <div class="card-responsive" v-if="filteredPlaces.length > 0">
     <div class="row g-3">
       <div
         class="col-md-6 col-xl-3"
@@ -276,11 +353,17 @@ const filteredPlaces = computed(() => {
             >
             <button
               type="button"
-              class="btn btn-sm btn-link text-danger p-0"
-              aria-pressed="true"
-              aria-label="Favorite Baybay Sunset Walk"
+              class="btn btn-link text-danger p-0"
+              @click="changeFavorite(place)"
             >
-              <i class="fa-regular fa-heart"></i>
+              <i
+                class="fa-regular fa-heart"
+                v-if="place.favorite === false"
+              ></i>
+              <i
+                class="fa-solid fa-heart"
+                v-else-if="place.favorite === true"
+              ></i>
             </button>
           </div>
           <div class="card-body">
@@ -329,15 +412,11 @@ const filteredPlaces = computed(() => {
       </div>
     </div>
   </div>
-  <!-- Empty state (swap in when there are no places) -->
-  <!--
-      <div class="text-center py-5" role="status">
-        <i class="bi bi-geo-alt fs-1 text-muted"></i>
-        <h2 class="h5 mt-3">No places yet</h2>
-        <p class="text-muted">Add your first place to start planning.</p>
-        <button type="button" class="btn btn-rose" data-bs-toggle="modal" data-bs-target="#placeModal">Add place</button>
-      </div>
-      -->
+  <div class="text-center py-5" role="status" v-else>
+    <i class="bi bi-geo-alt fs-1 text-muted"></i>
+    <h2 class="h5 mt-3">No places yet</h2>
+    <p class="text-muted">Add your first place to start planning.</p>
+  </div>
 
   <!-- Add or Edit Places -->
   <div
@@ -347,14 +426,14 @@ const filteredPlaces = computed(() => {
     data-bs-backdrop="static"
     data-bs-keyboard="false"
   >
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
       <div class="modal-content">
         <form @submit.prevent="placeFormSubmit">
           <div class="modal-header">
             <h4 class="modal-title">
               {{ placeFormMode === "create" ? "Add" : "Update" }} Place
             </h4>
-            <input type="text" v-model="placeForm.id" />
+            <input type="hidden" v-model="placeForm.id" />
           </div>
           <div class="modal-body">
             <div class="form-group mb-3">
@@ -366,52 +445,75 @@ const filteredPlaces = computed(() => {
                 v-model="placeForm.name"
               />
             </div>
-            <div class="form-group mb-3">
-              <label for="">Category</label>
-              <VueSelect
-                :options="categoryOptions"
-                placeholder="Select a category"
-                v-model="placeForm.category_id"
-              />
-            </div>
-            <div class="form-group mb-3">
-              <label for="">Address/ Area</label>
-              <input
-                type="text"
-                class="form-control"
-                placeholder="Street, Barangay. City"
-                v-model="placeForm.address"
-              />
-            </div>
-            <div class="form-group mb-3">
-              <label for="">Contact</label>
-              <input
-                type="text"
-                class="form-control"
-                placeholder="Phone or Social Link"
-              />
-            </div>
-            <div class="form-group mb-3">
-              <label for="">Map Link</label>
-              <div class="input-group mb-3">
-                <span class="input-group-text" id="basic-addon1"
-                  ><i class="fa-solid fa-map-pin"></i
-                ></span>
-                <input
-                  type="text"
-                  class="form-control"
-                  placeholder="https://maps.google.com/..."
-                  v-model="placeForm.map_link"
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label for="">Category</label>
+                <VueSelect
+                  :options="categoryOptions"
+                  placeholder="Select a category"
+                  v-model="placeForm.category_id"
                 />
               </div>
-            </div>
-            <div class="row">
-              <div class="col-md-6 mb-3">
+              <div class="col-md-6">
                 <label for="">Status</label>
                 <select v-model="placeForm.status" class="form-select">
                   <option value="wishlist">Wishlist</option>
                   <option value="visited">Visited</option>
                 </select>
+              </div>
+            </div>
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label for="">Address/ Area</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  placeholder="Street, Barangay. City"
+                  v-model="placeForm.address"
+                />
+              </div>
+              <div class="col-md-6">
+                <label for="">Contact</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  placeholder="Phone or Social Link"
+                />
+              </div>
+            </div>
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label for="">Map Link</label>
+                <div class="input-group">
+                  <span class="input-group-text" id="basic-addon1"
+                    ><i class="fa-solid fa-map-pin"></i
+                  ></span>
+                  <input
+                    type="text"
+                    class="form-control"
+                    placeholder="https://maps.google.com/..."
+                    v-model="placeForm.map_link"
+                  />
+                </div>
+              </div>
+              <div class="col-md-6">
+                <label for="placePinpoint"
+                  >Pinpoint (latitude, longitude)</label
+                >
+                <div class="input-group">
+                  <span class="input-group-text"
+                    ><i class="fa-solid fa-location-dot"></i
+                  ></span>
+                  <input
+                    type="text"
+                    class="form-control"
+                    placeholder="11.5853, 122.7511"
+                    autocomplete="off"
+                    pattern="\s*-?\d{1,2}(\.\d+)?\s*,\s*-?\d{1,3}(\.\d+)?\s*"
+                    title="Use the format: latitude, longitude (for example 11.5853, 122.7511)"
+                    v-model="placeForm.pinpoint"
+                  />
+                </div>
               </div>
             </div>
             <div class="row">
