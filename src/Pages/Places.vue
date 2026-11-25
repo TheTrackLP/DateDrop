@@ -85,105 +85,105 @@ onMounted(fetchCategories);
 const totalPlaces = ref("");
 const totalVisited = ref("");
 const totalWishlist = ref("");
+const loading = ref(false);
 const placesList = ref([]);
 const fetchPlacesInfo = async () => {
-  const { data, error } = await supabase
-    .from("places")
-    .select(`*, categories (name, icon, color)`);
-  placesList.value = data;
+  loading.value = true;
+  try {
+    const [placeResults, savedPlace, countVisited, countWishlist] =
+      await Promise.all([
+        supabase.from("places").select(`*, categories (name, icon, color)`),
+        supabase.from("places").select("*", { count: "exact", head: true }),
 
-  const { count: savedPlace } = await supabase
-    .from("places")
-    .select("*", { count: "exact", head: true });
+        supabase
+          .from("places")
+          .select("status", { count: "exact", head: true })
+          .eq("status", "Visited"),
+        supabase
+          .from("places")
+          .select("status", { count: "exact", head: true })
+          .eq("status", "Wishlist"),
+      ]);
 
-  const { count: countVisited } = await supabase
-    .from("places")
-    .select("status", { count: "exact", head: true })
-    .eq("status", "Visited");
+    const results = [placeResults, savedPlace, countVisited, countWishlist];
 
-  const { count: countWishlist } = await supabase
-    .from("places")
-    .select("status", { count: "exact", head: true })
-    .eq("status", "Wishlist");
+    const failed = results.find((result) => result.error);
 
-  totalPlaces.value = savedPlace;
-  totalVisited.value = countVisited;
-  totalWishlist.value = countWishlist;
+    if (failed) throw failed.error;
+
+    placesList.value = placeResults.data;
+    totalPlaces.value = savedPlace.count;
+    totalVisited.value = countVisited.count;
+    totalWishlist.value = countWishlist.count;
+  } catch (error) {
+    console.error("Places fetching error:", error);
+  } finally {
+    loading.value = false;
+  }
 };
 
 onMounted(fetchPlacesInfo);
 
-const latPoint = ref("");
-const lngPoint = ref("");
-
 const placeFormSubmit = async () => {
   if (placeFormMode.value === "create") {
-    placeFormMode.value = "create";
-    const [lat, lng] = placeForm.value.pinpoint.split(/[,]+/);
-    latPoint.value = lat;
-    lngPoint.value = lng;
-    const { error } = await supabase.from("places").insert({
-      name: placeForm.value.name,
-      category_id: placeForm.value.category_id,
-      address: placeForm.value.address,
-      map_link: placeForm.value.map_link,
-      price_range: placeForm.value.price_range,
-      hours: placeForm.value.hours,
-      link: placeForm.value.link,
-      notes: placeForm.value.notes,
-      status: placeForm.value.status,
-      lat: lat,
-      lng: lng,
-    });
+    loading.value = true;
+    try {
+      placeFormMode.value = "create";
+      const { pinpoint, ...placeData } = placeForm.value;
+      const [lat, lng] = pinpoint.split(",");
 
-    if (error) {
-      Swal.fire({
-        title: "Error",
-        text: error.message,
-        icon: "error",
+      const { error } = await supabase.from("places").insert({
+        ...placeData,
+        lat: lat.trim(),
+        lng: lng.trim(),
       });
+
+      if (error) throw error;
+      Swal.fire({
+        title: "Success",
+        text: "Success, Place Added",
+        icon: "success",
+        timer: 2000,
+      });
+
+      closeFormModal();
+      await fetchPlacesInfo();
+    } catch (error) {
+      Swal.fire("Error", error.message, "error");
+    } finally {
+      loading.value = false;
     }
-    closeFormModal();
-    await fetchPlacesInfo();
-    Swal.fire({
-      title: "Success",
-      text: "Success, Place Added",
-      icon: "success",
-      timer: 2000,
-    });
   } else {
-    placeFormMode.value = "edit";
+    try {
+      placeFormMode.value = "edit";
 
-    const { error } = await supabase
-      .from("places")
-      .update({
-        name: placeForm.value.name,
-        category_id: placeForm.value.category_id,
-        address: placeForm.value.address,
-        map_link: placeForm.value.map_link,
-        price_range: placeForm.value.price_range,
-        hours: placeForm.value.hours,
-        link: placeForm.value.link,
-        notes: placeForm.value.notes,
-        status: placeForm.value.status,
-      })
-      .eq("id", placeForm.value.id);
+      const { pinpoint, ...placeData } = placeForm.value;
+      const [lat, lng] = pinpoint.split(",");
 
-    if (error) {
+      const { error } = await supabase
+        .from("places")
+        .insert({
+          ...placeData,
+          lat: lat.trim(),
+          lng: lng.trim(),
+        })
+        .eq("id", placeForm.value.id);
+
+      if (error) throw error;
       Swal.fire({
-        title: "Error",
-        text: error.message,
-        icon: "error",
+        title: "Success",
+        text: "Success, Place Updated",
+        icon: "success",
+        timer: 2000,
       });
+
+      closeFormModal();
+      await fetchPlacesInfo();
+    } catch (error) {
+      Swal.fire("Error", error.message, "error");
+    } finally {
+      loading.value = false;
     }
-    closeFormModal();
-    await fetchPlacesInfo();
-    Swal.fire({
-      title: "Success",
-      text: "Success, Place Updated",
-      icon: "success",
-      timer: 2000,
-    });
   }
 };
 

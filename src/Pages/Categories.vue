@@ -15,6 +15,7 @@ const categoryForm = ref({
 
 const openFormModal = () => {
   openModal(categoryFormModal);
+  categoryFormMode.value = "create";
 };
 
 const closeFormModal = () => {
@@ -28,94 +29,99 @@ const closeFormModal = () => {
   };
 };
 
-const totalCategories = ref("");
+const loading = ref(false);
+
+const totalCategories = ref(0);
 const categoriesList = ref([]);
 const fetchCategories = async () => {
-  const { data: categories, error } = await supabase
-    .from("categories")
-    .select("*");
-  categoriesList.value = categories;
+  loading.value = true;
+  try {
+    const [categories, countCategory] = await Promise.all([
+      supabase.from("categories").select("*").order("id", { ascending: true }),
 
-  const { count: countCategory } = await supabase
-    .from("categories")
-    .select("*", { count: "exact", head: true });
-  totalCategories.value = countCategory;
+      supabase.from("categories").select("*", { count: "exact", head: true }),
+    ]);
+
+    totalCategories.value = countCategory.count;
+    categoriesList.value = categories.data;
+  } catch (error) {
+    Swal.fire({
+      title: "Error",
+      text: "Categories fetching error" + error.message,
+      icon: "error",
+      timer: 2000,
+    });
+  } finally {
+    loading.value = false;
+  }
 };
 
 onMounted(fetchCategories);
 
 const fetchCategoryData = async (row) => {
+  openFormModal(categoryFormModal);
+  categoryFormMode.value = "edit";
+
   const { data, error } = await supabase
     .from("categories")
     .select("*")
     .eq("id", row.id)
     .single();
 
-  openFormModal(categoryFormModal);
   categoryForm.value = data;
-  categoryFormMode.value = "edit";
 };
 
 const submitCategoryForm = async () => {
   if (categoryFormMode.value === "create") {
-    categoryFormMode.value = "create";
-    const { error } = await supabase.from("categories").insert({
-      name: categoryForm.value.name,
-      icon: categoryForm.value.icon,
-      color: categoryForm.value.color,
-      description: categoryForm.value.description,
-      status: 1,
-    });
+    loading.value = true;
+    try {
+      categoryFormMode.value = "create";
+      const { data, error } = await supabase
+        .from("categories")
+        .insert(categoryForm.value)
+        .select()
+        .single();
 
-    if (error) {
+      if (error) throw error;
       Swal.fire({
-        title: "Error",
-        text: error.message,
-        icon: "error",
-        timer: 2000,
+        title: "Success",
+        text: "Success, Category Added",
+        icon: "success",
+        timer: 1500,
       });
+      closeFormModal();
+
+      categoriesList.value.unshift(data);
+      totalCategories.value++;
+    } catch (error) {
+      Swal.fire("Error", error.message, "error");
+    } finally {
+      loading.value = false;
     }
-
-    closeFormModal();
-    await fetchCategories();
-
-    Swal.fire({
-      title: "Success",
-      text: "Success, Category Added",
-      icon: "success",
-      timer: 2000,
-    });
   } else {
-    categoryFormMode.value = "edit";
+    try {
+      categoryFormMode.value = "edit";
 
-    const { error } = await supabase
-      .from("categories")
-      .update({
-        name: categoryForm.value.name,
-        icon: categoryForm.value.icon,
-        color: categoryForm.value.color,
-        description: categoryForm.value.description,
-      })
-      .eq("id", categoryForm.value.id);
+      const { error } = await supabase
+        .from("categories")
+        .update(categoryForm.value)
+        .eq("id", categoryForm.value.id);
 
-    if (error) {
+      if (error) throw error;
       Swal.fire({
-        title: "Error",
-        text: error.message,
-        icon: "error",
-        timer: 2000,
+        title: "Success",
+        text: "Success, Category Updated",
+        icon: "success",
+        timer: 1500,
       });
+
+      closeFormModal();
+      await fetchCategories();
+    } catch (error) {
+      Swal.fire("Error", error.message, "error");
+    } finally {
+      loading.value = false;
     }
-
-    closeFormModal();
-    await fetchCategories();
-
-    Swal.fire({
-      title: "Success",
-      text: "Success, Category Updated",
-      icon: "success",
-      timer: 2000,
-    });
   }
 };
 
@@ -294,8 +300,10 @@ const changedStatus = async (row) => {
       <div class="modal-content">
         <form @submit.prevent="submitCategoryForm">
           <div class="modal-header">
-            <h4 class="modal-title">Add Category</h4>
-            <input type="text" v-model="categoryForm.id" />
+            <h4 class="modal-title">
+              {{ categoryFormMode === "create" ? "Add" : "Update" }} Category
+            </h4>
+            <input type="hidden" v-model="categoryForm.id" />
           </div>
           <div class="modal-body">
             <div class="form-group mb-3">
@@ -341,7 +349,9 @@ const changedStatus = async (row) => {
             >
               Cancel
             </button>
-            <button class="btn btn-rose" type="submit">Add Category</button>
+            <button class="btn btn-rose" type="submit">
+              {{ categoryFormMode === "create" ? "Add" : "Update" }} Category
+            </button>
           </div>
         </form>
       </div>

@@ -9,17 +9,30 @@ import {
 } from "@vue-leaflet/vue-leaflet";
 import { computed, onMounted, ref } from "vue";
 import { supabase } from "@/Lib/supabase";
-
+const loading = ref(false);
 const placesList = ref([]);
 const categoriesList = ref([]);
 const fetchModulesData = async () => {
-  const { data: places } = await supabase
-    .from("places")
-    .select(`*, categories (name, color, icon)`);
-  placesList.value = places;
+  loading.value = true;
+  try {
+    const [places, categories] = await Promise.all([
+      supabase.from("places").select(`*, categories (name, color, icon)`),
 
-  const { data: categories } = await supabase.from("categories").select("*");
-  categoriesList.value = categories;
+      supabase.from("categories").select("*"),
+    ]);
+    const results = [places, categories];
+
+    const failed = results.find((result) => result.error);
+
+    if (failed) throw failed.error;
+
+    placesList.value = places.data;
+    categoriesList.value = categories.data;
+  } catch (error) {
+    console.error("Fetching data error", error);
+  } finally {
+    loading.value = false;
+  }
 };
 
 const categoriesOptions = computed(() => {

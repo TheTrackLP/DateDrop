@@ -6,59 +6,88 @@ import { onMounted, ref } from "vue";
 const memoriesList = ref([]);
 const placesList = ref([]);
 const categoriesList = ref([]);
-const totalPlaces = ref(null);
-const totalMemories = ref(null);
-const totalWishlist = ref(null);
-const totalVisited = ref(null);
+const totalPlaces = ref(0);
+const totalMemories = ref(0);
+const totalWishlist = ref(0);
+const totalVisited = ref(0);
 
+const loading = ref(false);
 const fetchListings = async () => {
-  const { data: places } = await supabase
-    .from("places")
-    .select(`*, categories (name, icon)`)
-    .limit(4)
-    .order("created_at", { ascending: true });
+  loading.value = true;
 
-  const { count: placeCount } = await supabase
-    .from("places")
-    .select("*", { count: "exact", head: true });
+  try {
+    const [
+      places,
+      placeCount,
+      wishlistCount,
+      visitCount,
+      memories,
+      memoriesCount,
+      categories,
+    ] = await Promise.all([
+      supabase
+        .from("places")
+        .select(`*, categories (name, icon)`)
+        .limit(4)
+        .order("created_at", { ascending: true }),
 
-  const { count: wishlistCount } = await supabase
-    .from("places")
-    .select("*", { count: "exact", head: true })
-    .eq("status", "Wishlist");
+      supabase.from("places").select("id", { count: "exact", head: true }),
 
-  const { count: visitCount } = await supabase
-    .from("places")
-    .select("*", { count: "exact", head: true })
-    .eq("status", "Visited");
+      supabase
+        .from("places")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "Wishlist"),
 
-  const { data: memories } = await supabase
-    .from("memories")
-    .select(`*, places (name)`)
-    .limit(3)
-    .order("created_at", { ascending: true });
+      supabase
+        .from("places")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "Visited"),
 
-  const { count: memoriesCount } = await supabase
-    .from("memories")
-    .select("*", { count: "exact", head: true });
+      supabase
+        .from("memories")
+        .select(`*, places (name)`)
+        .limit(3)
+        .order("created_at", { ascending: true }),
 
-  const { data: categories } = await supabase
-    .from("categories")
-    .select(
-      `*,
-        total:places(count),
-        visited:places!left(count)
-    `,
-    )
-    .eq("visited.status", "Visited");
+      supabase.from("memories").select("*", { count: "exact", head: true }),
 
-  categoriesList.value = categories;
-  totalPlaces.value = placeCount;
-  totalMemories.value = memoriesCount;
-  totalWishlist.value = wishlistCount;
-  totalVisited.value = visitCount;
-  placesList.value = places;
-  memoriesList.value = memories;
+      supabase
+        .from("categories")
+        .select(
+          `*,
+              total:places(count),
+              visited:places!left(count)
+          `,
+        )
+        .eq("visited.status", "Visited"),
+    ]);
+
+    const results = [
+      categories,
+      placeCount,
+      memoriesCount,
+      wishlistCount,
+      visitCount,
+      places,
+      memories,
+    ];
+
+    const failed = results.find((result) => result.error);
+
+    if (failed) throw failed.error;
+
+    categoriesList.value = categories.data;
+    placesList.value = places.data;
+    memoriesList.value = memories.data;
+    totalPlaces.value = placeCount.count;
+    totalWishlist.value = wishlistCount.count;
+    totalMemories.value = memoriesCount.count;
+    totalVisited.value = visitCount.count;
+  } catch (error) {
+    console.error("Dashboard fetching error:", error);
+  } finally {
+    loading.value = false;
+  }
 };
 
 onMounted(fetchListings);

@@ -4,6 +4,7 @@ import { closeModal, formattedDate, openModal } from "@/Reuseables";
 import Swal from "sweetalert2";
 import { computed, onMounted, ref } from "vue";
 
+const loading = ref(false);
 const memoriesFormMode = ref("create");
 const memoriesForm = ref({
   title: "",
@@ -49,101 +50,95 @@ const placesOptions = computed(() =>
   placeLists.value.map((c) => ({ label: `${c.name}`, value: c.id })),
 );
 
-onMounted(fetchPlacesList);
-
 const totalMemories = ref("");
 const memoriesList = ref([]);
 const fetchMemoriesInfo = async () => {
-  const { data: memories } = await supabase
-    .from("memories")
-    .select(`*, places (name)`);
-  memoriesList.value = memories;
+  try {
+    const [memories, countMemories] = await Promise.all([
+      supabase.from("memories").select(`*, places (name)`),
 
-  const { count: countMemories } = await supabase
-    .from("memories")
-    .select("*", { count: "exact", head: true });
+      supabase.from("memories").select("*", { count: "exact", head: true }),
+    ]);
 
-  totalMemories.value = countMemories;
+    const results = [memories, countMemories];
+
+    const failed = results.find((result) => result.error);
+
+    if (failed) throw failed.error;
+
+    memoriesList.value = memories.data;
+    totalMemories.value = countMemories.count;
+  } catch (error) {
+    console.error("Memories fetching error", error);
+  } finally {
+    loading.value = false;
+  }
 };
 
-onMounted(fetchMemoriesInfo);
+onMounted(async () => {
+  await Promise.all([fetchPlacesList, fetchMemoriesInfo]);
+});
 
 const fetchMemoryData = async (memory) => {
+  openModal(memoriesFormModal);
+  memoriesFormMode.value = "edit";
   const { data: memories } = await supabase
     .from("memories")
     .select("*")
     .eq("id", memory.id)
     .single();
 
-  memoriesFormMode.value = "edit";
-  openModal(memoriesFormModal);
   memoriesForm.value = memories;
 };
 
 const handleFormSubmit = async () => {
   if (memoriesFormMode.value === "create") {
-    memoriesFormMode.value = "create";
+    try {
+      memoriesFormMode.value = "create";
 
-    const { error } = await supabase.from("memories").insert({
-      title: memoriesForm.value.title,
-      date: memoriesForm.value.date,
-      place_id: memoriesForm.value.place_id,
-      caption: memoriesForm.value.caption,
-      notes: memoriesForm.value.notes,
-      photo_link: memoriesForm.value.photo_link,
-    });
+      const { data, error } = await supabase
+        .from("memories")
+        .insert(memoriesForm.value);
 
-    if (error) {
+      if (error) throw error;
       Swal.fire({
-        title: "Error",
-        text: error.message,
-        icon: "error",
-        timer: 2000,
+        title: "Success",
+        text: "Success, Memory Added!",
+        icon: "success",
+        timer: 1500,
       });
+
+      closeFormModal();
+      memoriesList.value.unshift(data);
+      totalMemories.value++;
+    } catch (error) {
+      Swal.fire("Error", error.message, "error");
+    } finally {
+      loading.value = false;
     }
-
-    closeFormModal();
-    await fetchMemoriesInfo();
-
-    Swal.fire({
-      title: "Success",
-      text: "Success, Memory Added!",
-      icon: "success",
-      timer: 1500,
-    });
   } else {
-    memoriesFormMode.value = "edit";
+    try {
+      emoriesFormMode.value = "edit";
 
-    const { error } = await supabase
-      .from("memories")
-      .update({
-        title: memoriesForm.value.title,
-        date: memoriesForm.value.date,
-        place_id: memoriesForm.value.place_id,
-        caption: memoriesForm.value.caption,
-        notes: memoriesForm.value.notes,
-        photo_link: memoriesForm.value.photo_link,
-      })
-      .eq("id", memoriesForm.value.id);
+      const { error } = await supabase
+        .from("memories")
+        .update(memoriesForm.value)
+        .eq("id", memoriesForm.value.id);
 
-    if (error) {
+      if (error) throw error;
       Swal.fire({
-        title: "Error",
-        text: error.message,
-        icon: "error",
-        timer: 2000,
+        title: "Success",
+        text: "Success, Memory Updated!",
+        icon: "success",
+        timer: 1500,
       });
+      closeFormModal();
+      await fetchMemoriesInfo();
+    } catch (error) {
+      Swal.fire("Error", error.message, "error");
+    } finally {
+      loading.value = false;
     }
-
-    closeFormModal();
-    await fetchMemoriesInfo();
-
-    Swal.fire({
-      title: "Success",
-      text: "Success, Memory Updated!",
-      icon: "success",
-      timer: 1500,
-    });
   }
 };
 
