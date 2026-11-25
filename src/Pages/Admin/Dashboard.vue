@@ -36,12 +36,12 @@ const fetchListings = async () => {
       supabase
         .from("places")
         .select("id", { count: "exact", head: true })
-        .eq("status", "Wishlist"),
+        .eq("status", "wishlist"),
 
       supabase
         .from("places")
         .select("id", { count: "exact", head: true })
-        .eq("status", "Visited"),
+        .eq("status", "visited"),
 
       supabase
         .from("memories")
@@ -56,10 +56,10 @@ const fetchListings = async () => {
         .select(
           `*,
               total:places(count),
-              visited:places!left(count)
+              visited:places(count)
           `,
         )
-        .eq("visited.status", "Visited"),
+        .eq("visited.status", "visited"),
     ]);
 
     const results = [
