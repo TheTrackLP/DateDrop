@@ -377,12 +377,12 @@ const changeFavorite = async (place) => {
           >
             <span
               class="badge rounded-pill text-bg-warning"
-              v-if="place.status === 'Wishlist'"
+              v-if="place.status === 'wishlist'"
               >Wishlist</span
             >
             <span
               class="badge rounded-pill text-bg-success"
-              v-else-if="place.status === 'Visited'"
+              v-else-if="place.status === 'visited'"
               >Visited</span
             >
             <div

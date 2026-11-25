@@ -279,12 +279,12 @@ const progressBarPresent = (c) => {
               </div>
               <span
                 class="badge rounded-pill text-bg-success"
-                v-if="place.status === 'Visited'"
+                v-if="place.status === 'wisited'"
                 >Visited</span
               >
               <span
                 class="badge rounded-pill text-bg-warning"
-                v-else-if="place.status === 'Wishlist'"
+                v-else-if="place.status === 'wishlist'"
                 >Wishlist</span
               >
             </li>

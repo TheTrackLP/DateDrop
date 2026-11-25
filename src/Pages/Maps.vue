@@ -196,12 +196,12 @@ const filteredPlaces = computed(() => {
               <div class="d-flex flex-wrap gap-2 align-items-center">
                 <span
                   class="badge rounded-pill text-bg-success"
-                  v-if="row.status === 'Visited'"
+                  v-if="row.status === 'visited'"
                   >Visited</span
                 >
                 <span
                   class="badge rounded-pill text-bg-warning"
-                  v-else-if="row.status === 'Wishlist'"
+                  v-else-if="row.status === 'wishlist'"
                   >Wishlist</span
                 >
                 <span class="small text-muted"
@@ -274,12 +274,12 @@ const filteredPlaces = computed(() => {
               >
               <span
                 class="badge rounded-pill text-bg-success"
-                v-if="place.status === 'Visited'"
+                v-if="place.status === 'visited'"
                 >Visited</span
               >
               <span
                 class="badge rounded-pill text-bg-warning"
-                v-else-if="place.status === 'Wishlist'"
+                v-else-if="place.status === 'wishlist'"
                 >Wishlist</span
               >
             </button>
