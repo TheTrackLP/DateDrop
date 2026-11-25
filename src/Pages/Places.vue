@@ -98,11 +98,11 @@ const fetchPlacesInfo = async () => {
         supabase
           .from("places")
           .select("status", { count: "exact", head: true })
-          .eq("status", "Visited"),
+          .eq("status", "visited"),
         supabase
           .from("places")
           .select("status", { count: "exact", head: true })
-          .eq("status", "Wishlist"),
+          .eq("status", "wishlist"),
       ]);
 
     const results = [placeResults, savedPlace, countVisited, countWishlist];
@@ -306,8 +306,8 @@ const changeFavorite = async (place) => {
           <label for="fStatus" class="visually-hidden"> Status </label>
           <select id="fStatus" v-model="selectedStatus" class="form-select">
             <option value="">Any status</option>
-            <option value="Wishlist">Wishlist</option>
-            <option value="Visited">Visited</option>
+            <option value="wishlist">Wishlist</option>
+            <option value="visited">Visited</option>
           </select>
         </div>
         <div class="col-6 col-md-2">

@@ -240,8 +240,8 @@ const filteredPlaces = computed(() => {
             <div class="col-6">
               <select id="pStatus" class="form-select" v-model="selectedStatus">
                 <option value="">Any status</option>
-                <option value="Visited">Visited</option>
-                <option value="Wishlist">Wishlist</option>
+                <option value="visited">Visited</option>
+                <option value="wishlist">Wishlist</option>
               </select>
             </div>
             <div class="col-6">
