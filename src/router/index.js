@@ -36,6 +36,11 @@ const routes = [
         name: "Maps",
         component: () => import("@/Pages/Maps.vue"),
       },
+      {
+        path: "profile",
+        name: "Profile",
+        component: () => import("@/Pages/Admin/Profile.vue"),
+      },
     ],
     meta: { requiresAuth: true },
   },

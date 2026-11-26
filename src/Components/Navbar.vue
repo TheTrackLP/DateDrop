@@ -37,7 +37,9 @@ const openDropdown = () => {
       </button>
       <ul class="dropdown-menu dropdown-menu-end">
         <li>
-          <a class="dropdown-item" href="#">👤 Profile</a>
+          <router-link class="dropdown-item" to="/admin/profile"
+            >👤 Profile</router-link
+          >
         </li>
         <li><hr class="dropdown-divider" /></li>
         <li>
