@@ -1,15 +1,11 @@
 <script setup>
-import { openDropdown, closeDropdown } from "@/Reuseables";
+import { toggleDropdown } from "@/Reuseables";
 import { ref } from "vue";
 
 const DropdownRef = ref(null);
 
-const openDropdownRef = () => {
-  openDropdown(DropdownRef);
-};
-
-const closeDropdownRef = () => {
-  closeDropdown(DropdownRef);
+const openDropdown = () => {
+  toggleDropdown(DropdownRef);
 };
 </script>
 
@@ -27,9 +23,10 @@ const closeDropdownRef = () => {
       <button
         ref="DropdownRef"
         class="btn dropdown-toggle"
+        data-bs-toggle="dropdown"
         type="button"
         aria-expanded="false"
-        @click="openDropdownRef"
+        @click="openDropdown"
       >
         <span
           class="rounded-circle bg-danger-subtle d-inline-flex align-items-center justify-content-center me-2"
@@ -40,9 +37,7 @@ const closeDropdownRef = () => {
       </button>
       <ul class="dropdown-menu dropdown-menu-end">
         <li>
-          <a class="dropdown-item" href="#" @click="closeDropdownRef"
-            >👤 Profile</a
-          >
+          <a class="dropdown-item" href="#">👤 Profile</a>
         </li>
         <li><hr class="dropdown-divider" /></li>
         <li>

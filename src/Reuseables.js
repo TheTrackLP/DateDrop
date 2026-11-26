@@ -22,18 +22,7 @@ export const formattedDate = (dateFormate) => {
   return new Date(dateFormate).toLocaleDateString("en-US", options);
 };
 
-let dropdownInstance = null;
-export const openDropdown = (dropdownRef) => {
+export const toggleDropdown = (dropdownRef) => {
   if (!dropdownRef) return;
-  nextTick(() => {
-    dropdownInstance = Dropdown.getOrCreateInstance(dropdownRef.value);
-    dropdownInstance.show();
-  });
-};
-
-export const closeDropdown = (dropdownRef) => {
-  nextTick(() => {
-    if (!dropdownRef) return;
-    dropdownInstance?.hide();
-  });
+  Dropdown.getOrCreateInstance(dropdownRef.value).toggle();
 };
