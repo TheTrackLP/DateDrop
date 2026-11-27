@@ -1,11 +1,19 @@
 <script setup>
+import { supabase } from "@/Lib/supabase";
 import { toggleDropdown } from "@/Reuseables";
 import { ref } from "vue";
+import { useRouter } from "vue-router";
 
 const DropdownRef = ref(null);
 
 const openDropdown = () => {
   toggleDropdown(DropdownRef);
+};
+
+const router = useRouter();
+const handleLogout = async () => {
+  await supabase.auth.signOut();
+  router.push({ name: "Login" });
 };
 </script>
 
@@ -43,9 +51,14 @@ const openDropdown = () => {
         </li>
         <li><hr class="dropdown-divider" /></li>
         <li>
-          <a class="dropdown-item" href="#" @click="closeDropdownRef"
-            >🚪 Log out</a
+          <button
+            type="button"
+            class="dropdown-item"
+            href="#"
+            @click="handleLogout"
           >
+            🚪 Log out
+          </button>
         </li>
       </ul>
     </div>

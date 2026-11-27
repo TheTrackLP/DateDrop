@@ -1,3 +1,53 @@
+<script setup>
+import { formattedDate } from "@/Reuseables";
+import { supabase } from "@/Lib/supabase";
+import { onMounted, ref } from "vue";
+
+const totalPlaces = ref(0);
+const totalVisited = ref(0);
+const totalMemories = ref(0);
+const profileData = ref(null);
+const loading = ref(false);
+const fetchCounts = async () => {
+  loading.value = true;
+
+  try {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    const [placeCount, visitedCount, memoriesCount, profile] =
+      await Promise.all([
+        supabase.from("places").select("id", { count: "exact", head: true }),
+
+        supabase
+          .from("places")
+          .select("status", { count: "exact", head: true })
+          .eq("status", "visited"),
+        supabase.from("memories").select("id", { count: "exact", head: true }),
+
+        supabase.from("users").select("*").eq("id", user.id).single(),
+      ]);
+
+    const results = [placeCount, visitedCount, memoriesCount, profile];
+
+    const failed = results.find((res) => res.error);
+
+    if (failed) throw failed.error;
+
+    totalPlaces.value = placeCount.count;
+    totalVisited.value = visitedCount.count;
+    totalMemories.value = memoriesCount.count;
+    profileData.value = profile.data;
+  } catch (error) {
+    console.error("Fetching count error", error);
+  } finally {
+    loading.value = false;
+  }
+};
+
+onMounted(fetchCounts);
+</script>
+
 <template>
   <div class="mb-4">
     <h1 class="h3 mb-1">My Profile</h1>
@@ -9,35 +59,42 @@
     <div class="col-lg-4">
       <div class="card shadow-sm text-center">
         <div class="card-body p-4">
-          <div
-            class="avatar rounded-circle text-white d-inline-flex align-items-center justify-content-center fw-bold mb-3"
-          >
-            AS
+          <div class="">
+            <img
+              src="/img/datedrop.png"
+              class="avatar rounded-circle text-white d-inline-flex align-items-center justify-content-center fw-bold mb-3"
+              style="width: 150px; height: 150px"
+            />
           </div>
-          <h2 class="h5 mb-0">Alex &amp; Sam</h2>
+          <h2 class="h5 mb-0">
+            {{ profileData?.my_name }} &amp; {{ profileData?.partner_name }}
+          </h2>
           <p class="text-muted small mb-1">alex@example.com</p>
           <p class="small mb-3">📍 Roxas City, Capiz</p>
-          <label for="photoInput" class="btn btn-sm btn-outline-rose"
+          <label for="photoInput" class="btn btn-sm btn-rose"
             >📷 Change photo</label
           >
           <input type="file" id="photoInput" class="d-none" accept="image/*" />
           <hr />
           <p class="small text-muted mb-0">
-            💕 Together since <strong class="text-body">Aug 30, 2023</strong>
+            💕 Together since
+            <strong class="text-body">{{
+              formattedDate(profileData?.anniversary)
+            }}</strong>
           </p>
         </div>
         <div class="card-footer bg-white">
           <div class="row text-center g-0">
             <div class="col-4">
-              <div class="h5 mb-0">25</div>
+              <div class="h5 mb-0">{{ totalPlaces }}</div>
               <div class="small text-muted">Places</div>
             </div>
             <div class="col-4 border-start border-end">
-              <div class="h5 mb-0">11</div>
+              <div class="h5 mb-0">{{ totalVisited }}</div>
               <div class="small text-muted">Visited</div>
             </div>
             <div class="col-4">
-              <div class="h5 mb-0">6</div>
+              <div class="h5 mb-0">{{ totalMemories }}</div>
               <div class="small text-muted">Memories</div>
             </div>
           </div>
@@ -56,10 +113,9 @@
               <label for="pName" class="form-label">Your name</label
               ><input
                 type="text"
-                id="pName"
                 class="form-control"
-                value="Alex"
                 autocomplete="name"
+                :value="profileData?.my_name"
                 required
               />
             </div>
@@ -69,7 +125,7 @@
                 type="text"
                 id="pPartner"
                 class="form-control"
-                value="Sam"
+                :value="profileData?.partner_name"
               />
             </div>
             <div class="col-12">
@@ -78,7 +134,7 @@
                 type="email"
                 id="pEmail"
                 class="form-control"
-                value="alex@example.com"
+                value=""
                 readonly
                 aria-describedby="emailHelp"
               />
@@ -92,7 +148,7 @@
                 type="date"
                 id="pAnniv"
                 class="form-control"
-                value="2023-08-30"
+                :value="profileData?.anniversary"
               />
             </div>
             <div class="col-sm-6">
@@ -101,7 +157,7 @@
                 type="text"
                 id="pCity"
                 class="form-control"
-                value="Roxas City, Capiz"
+                :value="profileData?.city"
               />
             </div>
             <div class="col-12">
@@ -112,10 +168,9 @@
                 rows="3"
                 maxlength="200"
                 placeholder="A line or two about you two"
+                >{{ profileData?.about_us }}</textarea
               >
-Two people who will travel for good seafood.</textarea
-              >
-              <div class="form-text">Up to 200 characters.</div>
+              <div class="form-text"></div>
             </div>
           </div>
         </div>
