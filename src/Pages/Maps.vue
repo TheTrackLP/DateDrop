@@ -66,6 +66,7 @@ const filteredPlaces = computed(() => {
   height: calc(100vh - 57px);
   height: calc(100dvh - 57px);
   overflow: hidden;
+  isolation: isolate;
 }
 #map {
   position: absolute;
@@ -125,14 +126,9 @@ const filteredPlaces = computed(() => {
   z-index: 1000;
 }
 .card-responsive {
-  height: 640px;
+  height: 860px;
   overflow-y: auto;
   overflow-x: hidden;
-}
-@media (max-width: 991.98px) {
-  .legend {
-    display: none;
-  }
 }
 </style>
 
@@ -155,8 +151,19 @@ const filteredPlaces = computed(() => {
               v-model="selectedPlaceName"
             />
           </div>
+          <button
+            type="button"
+            class="btn btn-rose shadow-sm text-nowrap d-lg-none"
+            data-bs-toggle="offcanvas"
+            data-bs-target="#placesPanel"
+            aria-controls="placesPanel"
+          >
+            📍 <span class="d-none d-sm-inline">Places</span>
+            <span class="badge text-bg-light">25</span>
+          </button>
         </div>
       </div>
+
       <div id="map">
         <l-map :zoom="12" :center="[11.442920744150456, 122.75913187334166]">
           <l-tile-layer
@@ -220,7 +227,6 @@ const filteredPlaces = computed(() => {
       class="places-panel offcanvas-lg offcanvas-end bg-white border-start flex-shrink-0"
       tabindex="-1"
       aria-labelledby="placesPanelLabel"
-      style="height: calc(100vh - 57px)"
     >
       <div class="offcanvas-header border-bottom">
         <h2 class="offcanvas-title h6 mb-0" id="placesPanelLabel">
